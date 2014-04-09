@@ -104,7 +104,7 @@ module Yesod.Auth.HashDB
     , setPasswordStrength
     , setPassword
     , upgradePasswordHash
-      -- * Authentification
+      -- * Authentication
     , validateUser
     , authHashDB
     , getAuthIdHashDB

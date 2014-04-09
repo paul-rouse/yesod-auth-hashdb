@@ -1,5 +1,5 @@
 name:            yesod-auth-hashdb
-version:         1.3
+version:         1.3.0.1
 license:         MIT
 license-file:    LICENSE
 author:          Patrick Brisbin, later changes Paul Rouse
