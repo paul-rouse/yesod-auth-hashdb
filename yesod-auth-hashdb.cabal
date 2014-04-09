@@ -1,0 +1,31 @@
+name:            yesod-auth-hashdb
+version:         1.3
+license:         MIT
+license-file:    LICENSE
+author:          Patrick Brisbin, later changes Paul Rouse
+maintainer:      Paul Rouse <pyr@doynton.org>
+synopsis:        Authentication plugin for Yesod.
+category:        Web, Yesod
+stability:       Stable
+cabal-version:   >= 1.6.0
+build-type:      Simple
+homepage:        http://www.yesodweb.com/
+description:     This package is the Yesod.Auth.HashDB plugin, originally included in yesod-auth, but now modified to be more secure and placed in a separate package.
+
+library
+    build-depends:   base                    >= 4
+                   , bytestring              >= 0.9.1.4
+                   , yesod-core              >= 1.2
+                   , yesod-auth              >= 1.3        && < 1.4
+                   , text                    >= 0.7
+                   , yesod-persistent        >= 1.2
+                   , yesod-form              >= 1.3
+                   , pwstore-fast            >= 2.2
+                   , cryptohash              >= 0.8
+
+    exposed-modules: Yesod.Auth.HashDB
+    ghc-options:     -Wall
+
+source-repository head
+  type:     git
+  location: https://github.com/paul-rouse/yesod-auth-hashdb
