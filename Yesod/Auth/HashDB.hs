@@ -398,7 +398,7 @@ User
     UniqueUser username
     deriving Typeable
 |]
-{-# DEPRECATED User, migrateUsers "The predefined User data will be removed soon - please define your own database table and accompanying instance of HashDBUser" #-}
+{-# DEPRECATED User, migrateUsers "The predefined User data type will be removed soon - please define your own database table and accompanying instance of HashDBUser" #-}
 
 #if MIN_VERSION_persistent(2, 0, 0)
 instance HashDBUser User where
