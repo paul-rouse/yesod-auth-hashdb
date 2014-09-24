@@ -110,7 +110,9 @@ module Yesod.Auth.HashDB
     , getAuthIdHashDB
       -- * Predefined data type
     , User
+#if !MIN_VERSION_persistent(2, 0, 0)
     , UserGeneric (..)
+#endif
     , UserId
     , EntityField (..)
     , migrateUsers
@@ -253,22 +255,34 @@ upgradePasswordHash strength u = do
 -- Authentication
 ----------------------------------------------------------------
 
+-- | Constraint for types of functions in this module
+--
+#if MIN_VERSION_persistent(2, 0, 0)
+type HashDBPersist master user =
+    ( YesodAuthPersist master
+    , PersistUnique (YesodPersistBackend master)
+    , AuthEntity master ~ user
+    , HashDBUser user
+    )
+#else
+type HashDBPersist master user =
+    ( YesodAuthPersist master
+    , PersistUnique (YesodPersistBackend master (HandlerT master IO))
+    , AuthEntity master ~ user
+    , HashDBUser user
+    )
+#endif
+
 -- | Given a user ID and password in plaintext, validate them against
 --   the database values.  This function retains compatibility with
 --   databases containing hashes produced by previous versions of this
 --   module, although they are less secure and should be upgraded as
 --   soon as possible.  They can be upgraded using 'upgradePasswordHash',
 --   or by insisting that users set new passwords.
-validateUser :: ( YesodPersist yesod
-                , b ~ YesodPersistBackend yesod
-                , PersistMonadBackend (b (HandlerT yesod IO)) ~ PersistEntityBackend user
-                , PersistUnique (b (HandlerT yesod IO))
-                , PersistEntity user
-                , HashDBUser    user
-                ) => 
+validateUser :: HashDBPersist site user =>
                 Unique user     -- ^ User unique identifier
-             -> Text            -- ^ Password in plaint-text
-             -> HandlerT yesod IO Bool
+             -> Text            -- ^ Password in plaintext
+             -> HandlerT site IO Bool
 validateUser userID passwd = do
   -- Checks that hash and password match
   let validate u = do hash <- userPasswordHash u
@@ -294,14 +308,9 @@ login = PluginR "hashdb" ["login"]
 
 -- | Handle the login form. First parameter is function which maps
 --   username (whatever it might be) to unique user ID.
-postLoginR :: ( YesodAuth y, YesodPersist y
-              , HashDBUser user, PersistEntity user
-              , b ~ YesodPersistBackend y
-              , PersistMonadBackend (b (HandlerT y IO)) ~ PersistEntityBackend user
-              , PersistUnique (b (HandlerT y IO))
-              )
-           => (Text -> Maybe (Unique user))
-           -> HandlerT Auth (HandlerT y IO) TypedContent
+postLoginR :: HashDBPersist site user =>
+              (Text -> Maybe (Unique user))
+           -> HandlerT Auth (HandlerT site IO) TypedContent
 postLoginR uniq = do
     (mu,mp) <- lift $ runInputPost $ (,)
         <$> iopt textField "username"
@@ -318,17 +327,11 @@ postLoginR uniq = do
 
 -- | A drop in for the getAuthId method of your YesodAuth instance which
 --   can be used if authHashDB is the only plugin in use.
-getAuthIdHashDB :: ( YesodAuth master, YesodPersist master
-                   , HashDBUser user, PersistEntity user
-                   , Key user ~ AuthId master
-                   , b ~ YesodPersistBackend master
-                   , PersistMonadBackend (b (HandlerT master IO)) ~ PersistEntityBackend user
-                   , PersistUnique (b (HandlerT master IO))
-                   )
-                => (AuthRoute -> Route master)   -- ^ your site's Auth Route
+getAuthIdHashDB :: HashDBPersist site user =>
+                   (AuthRoute -> Route site)     -- ^ your site's Auth Route
                 -> (Text -> Maybe (Unique user)) -- ^ gets user ID
-                -> Creds master                  -- ^ the creds argument
-                -> HandlerT master IO (Maybe (AuthId master))
+                -> Creds site                    -- ^ the creds argument
+                -> HandlerT site IO (Maybe (AuthId site))
 getAuthIdHashDB authR uniq creds = do
     muid <- maybeAuthId
     case muid of
@@ -347,13 +350,8 @@ getAuthIdHashDB authR uniq creds = do
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
-authHashDB :: ( YesodAuth m, YesodPersist m
-              , HashDBUser user
-              , PersistEntity user
-              , b ~ YesodPersistBackend m
-              , PersistMonadBackend (b (HandlerT m IO)) ~ PersistEntityBackend user
-              , PersistUnique (b (HandlerT m IO)))
-           => (Text -> Maybe (Unique user)) -> AuthPlugin m
+authHashDB :: HashDBPersist site user =>
+              (Text -> Maybe (Unique user)) -> AuthPlugin site
 authHashDB uniq = AuthPlugin "hashdb" dispatch $ \tm -> toWidget [hamlet|
 $newline never
     <div id="header">
@@ -401,7 +399,11 @@ User
     deriving Typeable
 |]
 
+#if MIN_VERSION_persistent(2, 0, 0)
+instance HashDBUser User where
+#else
 instance HashDBUser (UserGeneric backend) where
+#endif
   userPasswordHash = Just . userPassword
   userPasswordSalt = Just . userSalt
   setSaltAndPasswordHash s h u = u { userSalt     = s
