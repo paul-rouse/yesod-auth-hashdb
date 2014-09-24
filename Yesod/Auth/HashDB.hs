@@ -107,6 +107,7 @@ module Yesod.Auth.HashDB
       -- * Authentication
     , validateUser
     , authHashDB
+    , authHashDBWithForm
     , getAuthIdHashDB
       -- * Predefined data type
     , User
@@ -352,13 +353,54 @@ getAuthIdHashDB authR uniq creds = do
 --   which holds the username and a hash of the password
 authHashDB :: HashDBPersist site user =>
               (Text -> Maybe (Unique user)) -> AuthPlugin site
-authHashDB uniq = AuthPlugin "hashdb" dispatch $ \tm -> toWidget [hamlet|
+authHashDB uniq = authHashDBWithForm defaultForm uniq
+
+
+-- | Like 'authHashDB', but with an extra parameter to supply a custom HTML
+-- form.
+--
+-- The custom form should be specified as a function which takes a route to
+-- use as the form action, and returns a Widget containing the form.  The
+-- form must use the supplied route as its action URL, and, when submitted,
+-- it must send two text fields called "username" and "password".
+--
+-- For example, the following modification of the outline code given at the
+-- head of this module would replace the default form with a very minimal one
+-- which has no labels and a simple layout.
+--
+-- > instance YesodAuth App where
+-- >     ....
+-- >     authPlugins _ = [ authHashDBWithForm myform (Just . UniqueUser), .... ]
+-- >
+-- > myform :: Route App -> Widget
+-- > myform action = $(whamletFile "templates/loginform.hamlet")
+--
+-- where templates/loginform.hamlet contains
+--
+-- > <form method="post" action="@{action}">
+-- >     <input name="username">
+-- >     <input type="password" name="password">
+-- >     <input type="submit" value="Login">
+--
+authHashDBWithForm :: HashDBPersist site user =>
+                      (Route site -> WidgetT site IO ())
+                   -> (Text -> Maybe (Unique user))
+                   -> AuthPlugin site
+authHashDBWithForm form uniq =
+    AuthPlugin "hashdb" dispatch $ \tm -> form (tm login)
+    where
+        dispatch "POST" ["login"] = postLoginR uniq >>= sendResponse
+        dispatch _ _              = notFound
+
+
+defaultForm :: Yesod app => Route app -> WidgetT app IO ()
+defaultForm loginRoute = toWidget [hamlet|
 $newline never
     <div id="header">
         <h1>Login
 
     <div id="login">
-        <form method="post" action="@{tm login}">
+        <form method="post" action="@{loginRoute}">
             <table>
                 <tr>
                     <th>Username:
@@ -379,9 +421,6 @@ $newline never
                 }
 
 |]
-    where
-        dispatch "POST" ["login"] = postLoginR uniq >>= sendResponse
-        dispatch _ _              = notFound
 
 
 ----------------------------------------------------------------
