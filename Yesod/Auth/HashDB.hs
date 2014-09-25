@@ -33,16 +33,16 @@
 -- with databases which have been set up using older versions of this module.
 -- There are two levels of database compatibility:
 --
---     * The verification code recognises both the old and new hash formats,
---       so passwords can be verified against database entries which still
---       contain old-style hashes.
+-- * The verification code recognises both the old and new hash formats,
+--   so passwords can be verified against database entries which still
+--   contain old-style hashes.
 --
---     * The function 'upgradePasswordHash' can be used to migrate
---       existing user records to use the new format hash.  Unlike
---       freshly created password hashes, entries converted this way
---       must still have the old salt field, since the old hash function
---       remains part of the algorithm needed for verification.  (The
---       new hash is layered on top of the old one.)
+-- * The function 'upgradePasswordHash' can be used to migrate
+--   existing user records to use the new format hash.  Unlike
+--   freshly created password hashes, entries converted this way
+--   must still have the old salt field, since the old hash function
+--   remains part of the algorithm needed for verification.  (The
+--   new hash is layered on top of the old one.)
 --
 -- On the other hand, new passwords set up by 'setPassword' or
 -- 'setPasswordStrength' no longer use a separate salt field, so new users
@@ -95,6 +95,31 @@
 -- > > makePassword "MyPassword" 14
 --
 -- where \"14\" is the default strength parameter used in this module.
+--
+-- == Custom Login Form
+--
+-- Instead of using the built-in HTML form, a custom one can be supplied
+-- by using 'authHashDBWithForm' instead of 'authHashDB'.
+--
+-- The custom form needs to be given as a function returning a Widget, since
+-- it has to build in the supplied "action" URL, and it must provide two text
+-- fields called "username" and "password".  For example, the following
+-- modification of the outline code given above would replace the default
+-- form with a very minimal one which has no labels and a simple layout.
+--
+-- > instance YesodAuth App where
+-- >     ....
+-- >     authPlugins _ = [ authHashDBWithForm myform (Just . UniqueUser), .... ]
+-- >
+-- > myform :: Route App -> Widget
+-- > myform action = $(whamletFile "templates/loginform.hamlet")
+--
+-- where templates/loginform.hamlet contains
+--
+-- > <form method="post" action="@{action}">
+-- >     <input name="username">
+-- >     <input type="password" name="password">
+-- >     <input type="submit" value="Login">
 --
 -------------------------------------------------------------------------------
 module Yesod.Auth.HashDB
@@ -205,6 +230,9 @@ passwordHash strength pwd = do
 --   hashed password.  Unlike previous versions of this module, no separate
 --   salt field is required for new passwords (but it may still be required
 --   for compatibility while old password hashes remain in the database).
+--
+--   This function does not change the database; the calling application
+--   is responsible for saving the data which is returned.
 setPasswordStrength :: (MonadIO m, HashDBUser user) => Int -> Text -> user -> m user
 setPasswordStrength strength pwd u = do
     hashed <- passwordHash strength pwd
@@ -353,7 +381,7 @@ getAuthIdHashDB authR uniq creds = do
 --   which holds the username and a hash of the password
 authHashDB :: HashDBPersist site user =>
               (Text -> Maybe (Unique user)) -> AuthPlugin site
-authHashDB uniq = authHashDBWithForm defaultForm uniq
+authHashDB = authHashDBWithForm defaultForm
 
 
 -- | Like 'authHashDB', but with an extra parameter to supply a custom HTML
@@ -364,23 +392,9 @@ authHashDB uniq = authHashDBWithForm defaultForm uniq
 -- form must use the supplied route as its action URL, and, when submitted,
 -- it must send two text fields called "username" and "password".
 --
--- For example, the following modification of the outline code given at the
--- head of this module would replace the default form with a very minimal one
--- which has no labels and a simple layout.
+-- Please see the example in the documentation at the head of this module.
 --
--- > instance YesodAuth App where
--- >     ....
--- >     authPlugins _ = [ authHashDBWithForm myform (Just . UniqueUser), .... ]
--- >
--- > myform :: Route App -> Widget
--- > myform action = $(whamletFile "templates/loginform.hamlet")
---
--- where templates/loginform.hamlet contains
---
--- > <form method="post" action="@{action}">
--- >     <input name="username">
--- >     <input type="password" name="password">
--- >     <input type="submit" value="Login">
+-- Since 1.3.2
 --
 authHashDBWithForm :: HashDBPersist site user =>
                       (Route site -> WidgetT site IO ())
