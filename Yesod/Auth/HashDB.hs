@@ -2,12 +2,13 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE CPP                        #-}
 -------------------------------------------------------------------------------
 -- |
 -- Module      :  Yesod.Auth.HashDB
@@ -136,9 +137,7 @@ module Yesod.Auth.HashDB
     , getAuthIdHashDB
       -- * Predefined data type
     , User
-#if !MIN_VERSION_persistent(2, 0, 0)
     , UserGeneric (..)
-#endif
     , UserId
     , EntityField (..)
     , migrateUsers
@@ -286,21 +285,15 @@ upgradePasswordHash strength u = do
 
 -- | Constraint for types of functions in this module
 --
-#if MIN_VERSION_persistent(2, 0, 0)
 type HashDBPersist master user =
     ( YesodAuthPersist master
     , PersistUnique (YesodPersistBackend master)
     , AuthEntity master ~ user
+    , AuthId master ~ Key user
+    , PersistEntityBackend user ~ YesodPersistBackend master
     , HashDBUser user
+    , PersistEntity user
     )
-#else
-type HashDBPersist master user =
-    ( YesodAuthPersist master
-    , PersistUnique (YesodPersistBackend master (HandlerT master IO))
-    , AuthEntity master ~ user
-    , HashDBUser user
-    )
-#endif
 
 -- | Given a user ID and password in plaintext, validate them against
 --   the database values.  This function retains compatibility with
@@ -442,7 +435,7 @@ $newline never
 ----------------------------------------------------------------
 
 -- | Generate data base instances for a valid user
-share [mkPersist sqlSettings, mkMigrate "migrateUsers"]
+share [mkPersist sqlSettings { mpsGeneric = True }, mkMigrate "migrateUsers"]
          [persistUpperCase|
 User
     username Text Eq
@@ -453,11 +446,7 @@ User
 |]
 {-# DEPRECATED User, migrateUsers "The predefined User data type will be removed soon - please define your own database table and accompanying instance of HashDBUser" #-}
 
-#if MIN_VERSION_persistent(2, 0, 0)
-instance HashDBUser User where
-#else
 instance HashDBUser (UserGeneric backend) where
-#endif
   userPasswordHash = Just . userPassword
   userPasswordSalt = Just . userSalt
   setSaltAndPasswordHash s h u = u { userSalt     = s
