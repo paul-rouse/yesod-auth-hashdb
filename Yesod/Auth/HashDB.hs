@@ -19,8 +19,8 @@
 -- Stability   :  Stable
 -- Portability :  Portable
 --
--- A yesod-auth AuthPlugin designed to look users up in Persist where
--- their user id's and a hash of their password is stored.
+-- A yesod-auth AuthPlugin designed to look users up in a Persistent
+-- database where their user id and a hash of their password is stored.
 --
 -- This module was removed from @yesod-auth-1.3.0.0@ and is now
 -- maintained separately.
@@ -71,7 +71,7 @@
 --
 -- > instance HashDBUser User where
 -- >     userPasswordHash = userPassword
--- >     setPasswordHash h p = p { userPassword = Just h }
+-- >     setPasswordHash h u = u { userPassword = Just h }
 --
 -- In the YesodAuth instance declaration for your app, include 'authHashDB'
 -- like so:
@@ -95,7 +95,8 @@
 -- > > import Crypto.PasswordStore
 -- > > makePassword "MyPassword" 14
 --
--- where \"14\" is the default strength parameter used in this module.
+-- where \"14\" is the default strength parameter ('defaultStrength') used
+-- in this module.
 --
 -- == Custom Login Form
 --
