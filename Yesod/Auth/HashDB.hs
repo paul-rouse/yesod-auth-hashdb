@@ -209,7 +209,9 @@ class HashDBUser user where
   setSaltAndPasswordHash = setUserHashAndSalt
 
   {-# MINIMAL userPasswordHash, (setPasswordHash | (userPasswordSalt, setSaltAndPasswordHash)) #-}
+{-# DEPRECATED userPasswordSalt "Compatibility with old data containing a separate salt field will be removed eventually" #-}
 {-# DEPRECATED setUserHashAndSalt "Please use setSaltAndPasswordHash instead" #-}
+{-# DEPRECATED setSaltAndPasswordHash "Compatibility with old data containing a separate salt field will be removed eventually" #-}
 
 
 -- | Calculate salted hash using SHA1.  Retained for compatibility with
