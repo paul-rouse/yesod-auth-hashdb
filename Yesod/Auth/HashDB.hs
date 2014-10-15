@@ -129,8 +129,9 @@ module Yesod.Auth.HashDB
     , defaultStrength
     , setPasswordStrength
     , setPassword
+    , validatePass
     , upgradePasswordHash
-      -- * Authentication
+      -- * Interface to database and Yesod.Auth
     , validateUser
     , authHashDB
     , authHashDBWithForm
@@ -241,6 +242,42 @@ setPasswordStrength strength pwd u = do
 setPassword :: (MonadIO m, HashDBUser user) => Text -> user -> m user
 setPassword = setPasswordStrength defaultStrength
 
+-- | Validate a plaintext password against the hash in the user data structure.
+--   This function retains compatibility with user data produced by old
+--   versions of this module (prior to 1.3), although the hashes are less
+--   secure and should be upgraded as soon as possible.  They can be
+--   upgraded using 'upgradePasswordHash', or by insisting that users set
+--   new passwords.
+--
+--   The result distinguishes two types of validation failure, which may
+--   be useful in an application which supports multiple authentication
+--   methods:
+--
+--   * Just False - the user has a password set up, but the given one does
+--     not match it
+--
+--   * Nothing - the user does not have a password (the hash is Nothing)
+--
+--   Since 1.4.1
+--
+validatePass :: HashDBUser u => u -> Text -> Maybe Bool
+validatePass user passwd = do
+    hash <- userPasswordHash user
+    salt <- userPasswordSalt user
+    -- NB plaintext password characters are truncated to 8 bits here, and also
+    -- in saltedHash and passwordHash above (the hash and old salt are already
+    -- 8 bit).  This is for historical compatibility, but in practice it is
+    -- unlikely to reduce the entropy of most users' alphabets by much.
+    let hash' = BS.pack $ unpack hash
+        passwd' = BS.pack $ unpack $ if salt == "" then passwd
+                                     else
+                                         -- Extra layer for an upgraded old hash
+                                         saltedHash salt passwd
+    if passwordStrength hash' > 0
+        -- Will give >0 for new-style hash, else fall back
+        then return $ verifyPassword passwd' hash'
+        else return $ hash == saltedHash salt passwd
+
 -- | Upgrade existing user credentials to a stronger hash.  The existing
 --   hash may have been produced either by previous versions of this module,
 --   which used a weak algorithm, or from a weaker setting in the current
@@ -280,10 +317,10 @@ upgradePasswordHash strength u = do
 
 
 ----------------------------------------------------------------
--- Authentication
+-- Interface to database and Yesod.Auth
 ----------------------------------------------------------------
 
--- | Constraint for types of functions in this module
+-- | Constraint for types of interface functions in this module
 --
 type HashDBPersist master user =
     ( YesodAuthPersist master
@@ -296,32 +333,17 @@ type HashDBPersist master user =
     )
 
 -- | Given a user ID and password in plaintext, validate them against
---   the database values.  This function retains compatibility with
---   databases containing hashes produced by previous versions of this
---   module, although they are less secure and should be upgraded as
---   soon as possible.  They can be upgraded using 'upgradePasswordHash',
---   or by insisting that users set new passwords.
+--   the database values.  This function simply looks up the user id in the
+--   database and calls 'validatePass' to do the work.
+--
 validateUser :: HashDBPersist site user =>
                 Unique user     -- ^ User unique identifier
              -> Text            -- ^ Password in plaintext
              -> HandlerT site IO Bool
 validateUser userID passwd = do
-  -- Checks that hash and password match
-  let validate u = do hash <- userPasswordHash u
-                      salt <- userPasswordSalt u
-                      let hash' = BS.pack $ unpack hash
-                          passwd' = BS.pack $ unpack
-                              $ if salt == "" then passwd
-                                else
-                                    -- Extra layer for an upgraded old hash
-                                    saltedHash salt passwd
-                      if passwordStrength hash' > 0
-                        -- Will give >0 for new-style hash, else fall back
-                        then return $ verifyPassword passwd' hash'
-                        else return $ hash == saltedHash salt passwd
   -- Get user data
   user <- runDB $ getBy userID
-  return $ fromMaybe False $ validate . entityVal =<< user
+  return $ fromMaybe False $ flip validatePass passwd . entityVal =<< user
 
 
 login :: AuthRoute
