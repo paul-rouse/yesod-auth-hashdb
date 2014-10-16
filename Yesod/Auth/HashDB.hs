@@ -20,7 +20,7 @@
 -- Portability :  Portable
 --
 -- A yesod-auth AuthPlugin designed to look users up in a Persistent
--- database where their user id and a hash of their password is stored.
+-- database where the hash of their password is stored.
 --
 -- This module was removed from @yesod-auth-1.3.0.0@ and is now
 -- maintained separately.
@@ -51,24 +51,29 @@
 -- and can ignore the salt.
 --
 -- In a system which has been migrated from the old format, passwords
--- which are reset using the new format will have an empty salt field.
+-- which are reset will use the new format and will have an empty salt field.
 -- Once all the entries are of this form, it is safe to change the model
 -- to remove the salt, and change the 'HashDBUser' instance accordingly.
 --
--- To use this in a Yesod application, it must be an instance of
--- YesodPersist, and the username and hashed-passwords should be added
--- to the database.  The followng steps give an outline of what is required.
+-- To use this in a Yesod application, the foundation data type must be an
+-- instance of YesodPersist, and the username and hashed passwords should
+-- be added to the database.  The following steps give an outline of what
+-- is required.
 --
 -- You need a database table to store user records: in a scaffolded site it
 -- might look like:
 --
 -- > User
--- >     name Text             -- user name used by HashDB
+-- >     name Text             -- user name used to uniquely identify users
 -- >     password Text Maybe   -- password hash for HashDB
 -- >     UniqueUser name
 --
--- Create an instance of 'HashDBUser' for this data type:
+-- Create an instance of 'HashDBUser' for this data type.  For historical
+-- reasons "Yesod.Auth.HashDB" exports some names which are quite likely to
+-- clash with your own, so it is a good idea to import just the ones you need:
 --
+-- > import Yesod.Auth.HashDB (HashDBUser(..))
+-- > ....
 -- > instance HashDBUser User where
 -- >     userPasswordHash = userPassword
 -- >     setPasswordHash h u = u { userPassword = Just h }
@@ -76,20 +81,25 @@
 -- In the YesodAuth instance declaration for your app, include 'authHashDB'
 -- like so:
 --
+-- > import Yesod.Auth.HashDB (authHashDB, getAuthIdHashDB)
+-- > ....
 -- > instance YesodAuth App where
 -- >     ....
 -- >     authPlugins _ = [ authHashDB (Just . UniqueUser), .... ]
--- >     getAuthId = getAuthIdHashDB AuthR (Just . UniqueUser)
+-- >     getAuthId = getAuthIdHashDB AuthR (Just . UniqueUser)  -- Optional, see below
 --
 -- @AuthR@ should be your authentication route, and the function
 -- @(Just . UniqueUser)@ supplied to both 'authHashDB' and
 -- 'getAuthIdHashDB' takes a 'Text' and produces a 'Unique' value to
--- look up in the User table.  'getAuthIdHashDB' is just a convenience
--- for the case when 'HashDB' is the only plugin, and something else
--- would be needed when other plugins are used as well.
+-- look up in the User table.  In a scaffolded site you may not need to
+-- change the definition of @getAuthId@ at all, or you may prefer to modify
+-- the function which the scaffolding defines: 'getAuthIdHashDB' is just a
+-- convenience for the case when 'HashDB' is the only plugin.
 --
--- You can create password hashes manually as follows, if you need to
--- initialise the database:
+-- The application developer should provide an interface for setting passwords;
+-- it needs to call 'setPassword' and save the result in the database.
+-- You can also create password hashes manually as follows, if you need to
+-- initialise the database by hand:
 --
 -- > ghci -XOverloadedStrings
 -- > > import Crypto.PasswordStore
