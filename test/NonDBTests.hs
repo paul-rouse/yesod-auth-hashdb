@@ -53,11 +53,12 @@ nonDBTests = do
             valid `shouldBe` Just True
         it "still works after a second upgrade to a stronger setting" $ do
             newuser <- upgradePasswordHash defaultStrength oldStyleValidUser
-            neweruser <- case newuser of
-                           Just u -> upgradePasswordHash stronger u
-                           Nothing -> return $ Just oldStyleBadUser1 -- failure
-            let valid = neweruser >>= flip validatePass mypassword
-            valid `shouldBe` Just True
+            case newuser of
+                Just u -> do
+                    neweruser <- upgradePasswordHash stronger u
+                    let valid = neweruser >>= flip validatePass mypassword
+                    valid `shouldBe` Just True
+                Nothing -> expectationFailure "Failed to upgrade user!"
         it "is Nothing if there is no password hash" $ do
             newuser <- upgradePasswordHash defaultStrength oldStyleBadUser1
             newuser `shouldBe` Nothing
