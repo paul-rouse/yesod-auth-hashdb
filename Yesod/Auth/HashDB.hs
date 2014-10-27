@@ -175,8 +175,9 @@ import Crypto.PasswordStore        (makePassword, verifyPassword,
 defaultStrength :: Int
 defaultStrength = 14
 
--- | Interface for data type which holds user info. It's just a
---   collection of getters and setters
+-- | The type representing user information stored in the database should
+--   be an instance of this class.  It just provides the getters and setters
+--   used by the functions in this module.
 class HashDBUser user where
   -- | Retrieve password hash from user data
   userPasswordHash :: user -> Maybe Text
