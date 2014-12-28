@@ -96,10 +96,11 @@
 -- the function which the scaffolding defines: 'getAuthIdHashDB' is just a
 -- convenience for the case when 'HashDB' is the only plugin.
 --
--- The application developer should provide an interface for setting passwords;
--- it needs to call 'setPassword' and save the result in the database.
--- You can also create password hashes manually as follows, if you need to
--- initialise the database by hand:
+-- For a real application, the developer should provide some sort of
+-- of administrative interface for setting passwords; it needs to call
+-- 'setPassword' and save the result in the database.  However, if you
+-- need to initialise the database by hand, you can generate the correct
+-- password hash as follows:
 --
 -- > ghci -XOverloadedStrings
 -- > > import Crypto.PasswordStore
