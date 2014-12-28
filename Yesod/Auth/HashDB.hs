@@ -158,6 +158,7 @@ module Yesod.Auth.HashDB
 import Yesod.Persist
 import Yesod.Form
 import Yesod.Auth
+import Yesod.Auth.Message          (AuthMessage(InvalidUsernamePass))
 import Yesod.Core
 
 import Control.Applicative         ((<$>), (<*>))
@@ -173,7 +174,7 @@ import Crypto.PasswordStore        (makePassword, verifyPassword,
 -- | Default strength used for passwords (see "Crypto.PasswordStore" for
 --   details).
 defaultStrength :: Int
-defaultStrength = 14
+defaultStrength = 15
 
 -- | The type representing user information stored in the database should
 --   be an instance of this class.  It just provides the getters and setters
@@ -219,7 +220,7 @@ class HashDBUser user where
                      -> user -> user
   setSaltAndPasswordHash = setUserHashAndSalt
 
-  {-# MINIMAL userPasswordHash, (setPasswordHash | (userPasswordSalt, setSaltAndPasswordHash)) #-}
+{-# MINIMAL userPasswordHash, (setPasswordHash | (userPasswordSalt, setSaltAndPasswordHash)) #-}
 {-# DEPRECATED userPasswordSalt "Compatibility with old data containing a separate salt field will be removed eventually" #-}
 {-# DEPRECATED setUserHashAndSalt "Please use setSaltAndPasswordHash instead" #-}
 {-# DEPRECATED setSaltAndPasswordHash "Compatibility with old data containing a separate salt field will be removed eventually" #-}
@@ -377,11 +378,8 @@ postLoginR uniq = do
     isValid <- lift $ fromMaybe (return False) 
                  (validateUser <$> (uniq =<< mu) <*> mp)
     if isValid 
-       then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
-       else do
-           tm <- getRouteToParent
-           lift $ loginErrorMessage (tm LoginR) "Invalid username/password"
-
+        then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
+        else loginErrorMessageI LoginR InvalidUsernamePass
 
 -- | A drop in for the getAuthId method of your YesodAuth instance which
 --   can be used if authHashDB is the only plugin in use.
@@ -403,8 +401,8 @@ getAuthIdHashDB authR uniq creds = do
                 -- user exists
                 Just (Entity uid _) -> return $ Just uid
                 Nothing       -> do
-                                     _ <- loginErrorMessage (authR LoginR) "User not found"
-                                     return Nothing
+                    _ <- loginErrorMessage (authR LoginR) "Invalid username/password."
+                    return Nothing
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
