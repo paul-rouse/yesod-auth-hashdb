@@ -160,6 +160,7 @@ import Yesod.Persist
 import Yesod.Form
 import Yesod.Auth
 import Yesod.Core
+import qualified Yesod.Auth.Message as Msg
 
 import Control.Applicative         ((<$>), (<*>))
 import Data.Typeable
@@ -378,10 +379,8 @@ postLoginR uniq = do
     isValid <- lift $ fromMaybe (return False) 
                  (validateUser <$> (uniq =<< mu) <*> mp)
     if isValid 
-       then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
-       else do
-           tm <- getRouteToParent
-           lift $ loginErrorMessage (tm LoginR) "Invalid username/password"
+        then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
+        else loginErrorMessageI LoginR Msg.InvalidUsernamePass
 
 
 -- | A drop in for the getAuthId method of your YesodAuth instance which
@@ -404,8 +403,9 @@ getAuthIdHashDB authR uniq creds = do
                 -- user exists
                 Just (Entity uid _) -> return $ Just uid
                 Nothing       -> do
-                                     _ <- loginErrorMessage (authR LoginR) "User not found"
-                                     return Nothing
+                    mr <- getMessageRender
+                    _ <- loginErrorMessage (authR LoginR) (mr Msg.InvalidUsernamePass)
+                    return Nothing
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
