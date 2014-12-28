@@ -104,9 +104,9 @@
 --
 -- > ghci -XOverloadedStrings
 -- > > import Crypto.PasswordStore
--- > > makePassword "MyPassword" 14
+-- > > makePassword "MyPassword" 17
 --
--- where \"14\" is the default strength parameter ('defaultStrength') used
+-- where \"17\" is the default strength parameter ('defaultStrength') used
 -- in this module.
 --
 -- == Custom Login Form
@@ -174,7 +174,7 @@ import Crypto.PasswordStore        (makePassword, verifyPassword,
 -- | Default strength used for passwords (see "Crypto.PasswordStore" for
 --   details).
 defaultStrength :: Int
-defaultStrength = 14
+defaultStrength = 17
 
 -- | The type representing user information stored in the database should
 --   be an instance of this class.  It just provides the getters and setters
