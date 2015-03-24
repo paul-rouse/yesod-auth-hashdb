@@ -9,6 +9,8 @@ import Data.Text (pack, isInfixOf)
 
 import ExampleData
 
+-- For consistent layout of "it" items, we sometimes have a redundant "do":
+{-# ANN nonDBTests ("HLint: ignore Redundant do"::String) #-}
 
 nonDBTests :: Spec
 nonDBTests = do
