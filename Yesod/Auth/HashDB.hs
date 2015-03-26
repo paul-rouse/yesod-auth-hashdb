@@ -81,20 +81,22 @@
 -- In the YesodAuth instance declaration for your app, include 'authHashDB'
 -- like so:
 --
--- > import Yesod.Auth.HashDB (authHashDB, getAuthIdHashDB)
+-- > import Yesod.Auth.HashDB (authHashDB)
 -- > ....
 -- > instance YesodAuth App where
 -- >     ....
 -- >     authPlugins _ = [ authHashDB (Just . UniqueUser), .... ]
--- >     getAuthId = getAuthIdHashDB AuthR (Just . UniqueUser)  -- Optional, see below
+-- >     getAuthId creds = ... -- Perhaps modify scaffolding: see below
 --
--- @AuthR@ should be your authentication route, and the function
--- @(Just . UniqueUser)@ supplied to both 'authHashDB' and
--- 'getAuthIdHashDB' takes a 'Text' and produces a 'Unique' value to
--- look up in the User table.  In a scaffolded site you may not need to
--- change the definition of @getAuthId@ at all, or you may prefer to modify
--- the function which the scaffolding defines: 'getAuthIdHashDB' is just a
--- convenience for the case when 'HashDB' is the only plugin.
+-- The argument to 'authHashDB' is a function which takes a 'Text' and
+-- produces a 'Maybe' containing a 'Unique' value to look up in the User
+-- table.  The example @(Just . UniqueUser)@ shown here works for the
+-- model outlined above.
+--
+-- In the scaffolding, the definition of @getAuthId@ contains code to
+-- add a user who is not already in the database.  Depending on how users
+-- are administered, this may not make sense when using HashDB, so consider
+-- whether it should be removed.
 --
 -- For a real application, the developer should provide some sort of
 -- of administrative interface for setting passwords; it needs to call
@@ -406,6 +408,8 @@ getAuthIdHashDB authR uniq creds = do
                     mr <- getMessageRender
                     _ <- loginErrorMessage (authR LoginR) (mr Msg.InvalidUsernamePass)
                     return Nothing
+
+{-# DEPRECATED getAuthIdHashDB "If this is a problem, please discuss at https://github.com/paul-rouse/yesod-auth-hashdb/issues/5 " #-}
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
