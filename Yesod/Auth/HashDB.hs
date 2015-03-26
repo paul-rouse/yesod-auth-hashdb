@@ -12,7 +12,7 @@
 -------------------------------------------------------------------------------
 -- |
 -- Module      :  Yesod.Auth.HashDB
--- Copyright   :  (c) Patrick Brisbin 2010, Paul Rouse 2014
+-- Copyright   :  (c) Patrick Brisbin 2010, Paul Rouse 2014-2015
 -- License     :  MIT
 --
 -- Maintainer  :  Paul Rouse <pyr@doynton.org>
