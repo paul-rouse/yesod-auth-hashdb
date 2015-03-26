@@ -409,7 +409,7 @@ getAuthIdHashDB authR uniq creds = do
                     _ <- loginErrorMessage (authR LoginR) (mr Msg.InvalidUsernamePass)
                     return Nothing
 
-{-# DEPRECATED getAuthIdHashDB "If this is a problem, please discuss at https://github.com/paul-rouse/yesod-auth-hashdb/issues/5 " #-}
+{-# DEPRECATED getAuthIdHashDB "If this is a problem, please discuss at <https://github.com/paul-rouse/yesod-auth-hashdb/issues/5>" #-}
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
