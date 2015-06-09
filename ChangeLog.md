@@ -1,3 +1,7 @@
+## 1.4.2.2
+
+* Relax upper bound to allow persistent-2.2.*
+
 ## 1.4.2.1
 
 * Add ChangeLog
