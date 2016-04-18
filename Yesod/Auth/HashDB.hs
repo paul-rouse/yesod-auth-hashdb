@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE ConstraintKinds            #-}
@@ -164,7 +165,9 @@ import Yesod.Auth
 import Yesod.Core
 import qualified Yesod.Auth.Message as Msg
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative         ((<$>), (<*>))
+#endif
 import Data.Typeable
 
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
