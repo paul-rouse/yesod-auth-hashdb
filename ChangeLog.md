@@ -1,3 +1,7 @@
+## 1.4.3
+
+* Changes to work with persistent-2.5
+
 ## 1.4.2.2
 
 * Relax upper bound to allow persistent-2.2.*
