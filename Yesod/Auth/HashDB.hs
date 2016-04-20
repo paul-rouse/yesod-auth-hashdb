@@ -140,7 +140,6 @@
 -------------------------------------------------------------------------------
 module Yesod.Auth.HashDB
     ( HashDBUser(..)
-    , Unique (..)
     , defaultStrength
     , setPasswordStrength
     , setPassword
@@ -150,13 +149,6 @@ module Yesod.Auth.HashDB
     , validateUser
     , authHashDB
     , authHashDBWithForm
-    , getAuthIdHashDB
-      -- * Predefined data type
-    , User
-    , UserGeneric (..)
-    , UserId
-    , EntityField (..)
-    , migrateUsers
     ) where
 
 import Yesod.Persist
@@ -168,7 +160,6 @@ import qualified Yesod.Auth.Message as Msg
 #if __GLASGOW_HASKELL__ < 710
 import Control.Applicative         ((<$>), (<*>))
 #endif
-import Data.Typeable
 
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
 import qualified Crypto.Hash as CH (SHA1, Digest, hash)
@@ -347,7 +338,6 @@ type HashDBPersist master user =
     ( YesodAuthPersist master
     , PersistUnique (YesodPersistBackend master)
     , AuthEntity master ~ user
-    , AuthId master ~ Key user
 #if MIN_VERSION_persistent(2,5,0)
     , PersistEntityBackend user ~ BaseBackend (YesodPersistBackend master)
 #else
@@ -391,32 +381,6 @@ postLoginR uniq = do
         then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
         else loginErrorMessageI LoginR Msg.InvalidUsernamePass
 
-
--- | A drop in for the getAuthId method of your YesodAuth instance which
---   can be used if authHashDB is the only plugin in use.
-getAuthIdHashDB :: HashDBPersist site user =>
-                   (AuthRoute -> Route site)     -- ^ your site's Auth Route
-                -> (Text -> Maybe (Unique user)) -- ^ gets user ID
-                -> Creds site                    -- ^ the creds argument
-                -> HandlerT site IO (Maybe (AuthId site))
-getAuthIdHashDB authR uniq creds = do
-    muid <- maybeAuthId
-    case muid of
-        -- user already authenticated
-        Just uid -> return $ Just uid
-        Nothing       -> do
-            x <- case uniq (credsIdent creds) of
-                   Nothing -> return Nothing
-                   Just u  -> runDB (getBy u)
-            case x of
-                -- user exists
-                Just (Entity uid _) -> return $ Just uid
-                Nothing       -> do
-                    mr <- getMessageRender
-                    _ <- loginErrorMessage (authR LoginR) (mr Msg.InvalidUsernamePass)
-                    return Nothing
-
-{-# DEPRECATED getAuthIdHashDB "If this is a problem, please discuss at <https://github.com/paul-rouse/yesod-auth-hashdb/issues/5>" #-}
 
 -- | Prompt for username and password, validate that against a database
 --   which holds the username and a hash of the password
@@ -476,27 +440,3 @@ $newline never
                 }
 
 |]
-
-
-----------------------------------------------------------------
--- Predefined datatype
-----------------------------------------------------------------
-
--- | Generate data base instances for a valid user
-share [mkPersist sqlSettings { mpsGeneric = True }, mkMigrate "migrateUsers"]
-         [persistUpperCase|
-User
-    username Text Eq
-    password Text
-    salt     Text
-    UniqueUser username
-    deriving Typeable
-|]
-{-# DEPRECATED User, migrateUsers "The predefined User data type will be removed soon - please define your own database table and accompanying instance of HashDBUser" #-}
-
-instance HashDBUser (UserGeneric backend) where
-  userPasswordHash = Just . userPassword
-  userPasswordSalt = Just . userSalt
-  setSaltAndPasswordHash s h u = u { userSalt     = s
-                               , userPassword = h
-                               }
