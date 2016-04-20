@@ -13,7 +13,7 @@
 -------------------------------------------------------------------------------
 -- |
 -- Module      :  Yesod.Auth.HashDB
--- Copyright   :  (c) Patrick Brisbin 2010, Paul Rouse 2014-2015
+-- Copyright   :  (c) Patrick Brisbin 2010, Paul Rouse 2014-2016
 -- License     :  MIT
 --
 -- Maintainer  :  Paul Rouse <pyr@doynton.org>
@@ -189,38 +189,11 @@ class HashDBUser user where
   -- | Callback for 'setPassword' and 'upgradePasswordHash'.  Produces a
   --   version of the user data with the hash set to the new value.
   --
-  --   This is the method which you should define for new applications, which
-  --   do not require compatibility with databases containing hashes written
-  --   by previous versions of this module.  If you do need compatibility,
-  --   define 'setSaltAndPasswordHash' instead.
   setPasswordHash :: Text   -- ^ Password hash
                      -> user -> user
-  setPasswordHash = setSaltAndPasswordHash ""
 
-  setUserHashAndSalt :: Text    -- ^ Salt
-                     -> Text    -- ^ Password hash
-                     -> user -> user
-  setUserHashAndSalt =
-      error "Define setSaltAndPasswordHash to get old-database compatibility"
-
-  -- | Callback used in 'upgradePasswordHash' when compatibility is needed
-  --   with old-style hashes (including ones already upgraded using
-  --   'upgradePasswordHash').  This is not required for new applications,
-  --   which do not have a separate salt field in user data: please define
-  --   'setPasswordHash' instead.
-  --
-  --   The default implementation produces a runtime error, and will only be
-  --   called if a non-empty salt value needs to be set for compatibility
-  --   with an old database.
-  setSaltAndPasswordHash :: Text    -- ^ Salt
-                     -> Text    -- ^ Password hash
-                     -> user -> user
-  setSaltAndPasswordHash = setUserHashAndSalt
-
-  {-# MINIMAL userPasswordHash, (setPasswordHash | (userPasswordSalt, setSaltAndPasswordHash)) #-}
-{-# DEPRECATED userPasswordSalt "Compatibility with old data containing a separate salt field will be removed eventually" #-}
-{-# DEPRECATED setUserHashAndSalt "Please use setSaltAndPasswordHash instead" #-}
-{-# DEPRECATED setSaltAndPasswordHash "Compatibility with old data containing a separate salt field will be removed eventually" #-}
+  {-# MINIMAL userPasswordHash, setPasswordHash #-}
+{-# DEPRECATED userPasswordSalt "Verification against old data containing a separate salt field will be removed in version 1.6" #-}
 
 
 -- | Calculate salted hash using SHA1.  Retained for compatibility with
@@ -291,28 +264,25 @@ validatePass user passwd = do
         else return $ hash == saltedHash salt passwd
 
 -- | Upgrade existing user credentials to a stronger hash.  The existing
---   hash may have been produced either by previous versions of this module,
---   which used a weak algorithm, or from a weaker setting in the current
+--   hash will have been produced from a weaker setting in the current
 --   algorithm.  Use this function to produce an updated user record to
 --   store in the database.
 --
---   To allow transitional use, starting from hashes produced by older
---   versions of this module, and upgrading them to the new format,
---   we have to use the hash alone, without knowledge of the user's
---   plaintext password.  In this case, we apply the new algorithm to the
---   old hash, resulting in both hash functions, old and new, being used
---   one on top of the other; this situation is recognised by the hash
---   having the new format while the separate salt field is non-empty.
+--   As of version 1.5 this function cannot be used to upgrade a hash
+--   which has a non-empty separate salt field.  Such entries would have
+--   been produced originally by versions of this module prior to 1.3,
+--   but may have been upgraded using earlier versions of this function.
 --
 --   Returns Nothing if the user has no password (ie if 'userPasswordHash' u
---   is 'Nothing' and/or 'userPasswordSalt' u is 'Nothing').
+--   is 'Nothing'), if the password hash is not in the new format, or if the
+--   user has a non-empty salt field resulting from the old-style hashing
+--   algorithm.
 upgradePasswordHash :: (MonadIO m, HashDBUser user) => Int -> user -> m (Maybe user)
 upgradePasswordHash strength u = do
-    let old = do h <- userPasswordHash u
-                 s <- userPasswordSalt u
-                 return (h, s)
+    let old = userPasswordHash u
+        oldSalt = fromMaybe "" $ userPasswordSalt u
     case old of
-        Just (oldHash, oldSalt) -> do
+        Just oldHash -> do
             let oldHash' = BS.pack $ unpack oldHash
             if passwordStrength oldHash' > 0
               then
@@ -320,11 +290,10 @@ upgradePasswordHash strength u = do
                 let newHash = pack $ BS.unpack $ strengthenPassword oldHash' strength
                 in if oldSalt == ""
                    then return $ Just $ setPasswordHash newHash u
-                   else return $ Just $ setSaltAndPasswordHash oldSalt newHash u
+                   else return Nothing   -- Can't handle non-empty salt
               else do
-                -- Old-style hash: do extra layer of hash with the new algorithm
-                newHash <- passwordHash strength oldHash
-                return $ Just $ setSaltAndPasswordHash oldSalt newHash u
+                -- Old-style hash: cannot upgrade
+                return Nothing
         Nothing -> return Nothing
 
 

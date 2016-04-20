@@ -31,6 +31,12 @@ nonDBTests = do
         it "fails validation giving Nothing" $
             validatePass oldStyleBadUser2 mypassword `shouldBe` Nothing
 
+      context "Previously upgraded old-style user" $ do
+        it "verifies OK with correct password" $
+            validatePass oldStyleUpgradedUser mypassword `shouldBe` Just True
+        it "fails validation with a wrong password giving Just False" $
+            validatePass oldStyleUpgradedUser changedpw `shouldBe` Just False
+
       context "New style valid user" $ do
         it "verifies OK with correct password" $
             validatePass newStyleValidUser mypassword `shouldBe` Just True
@@ -41,31 +47,26 @@ nonDBTests = do
         it "fails validation giving Nothing" $
             validatePass newStyleBadUser mypassword `shouldBe` Nothing
 
+      context "New-style hash in old-style format with blank salt" $ do
+        it "verifies OK with correct password" $
+            validatePass newStyleInOldFormat mypassword `shouldBe` Just True
+        it "fails validation with a wrong password giving Just False" $
+            validatePass newStyleInOldFormat changedpw `shouldBe` Just False
+
 
     describe "upgradePasswordHash" $ do
 
       context "Upgrade of old-style password hash" $ do
-        it "has the same salt value" $ do
+        it "is Nothing if the user has a valid password hash" $ do
             newuser <- upgradePasswordHash defaultStrength oldStyleValidUser
-            let newsalt = newuser >>= userPasswordSalt
-            newsalt `shouldBe` Just "somesalt"
-        it "still verifies with the same password" $ do
-            newuser <- upgradePasswordHash defaultStrength oldStyleValidUser
-            let valid = newuser >>= flip validatePass mypassword
-            valid `shouldBe` Just True
-        it "still works after a second upgrade to a stronger setting" $ do
-            newuser <- upgradePasswordHash defaultStrength oldStyleValidUser
-            case newuser of
-                Just u -> do
-                    neweruser <- upgradePasswordHash stronger u
-                    let valid = neweruser >>= flip validatePass mypassword
-                    valid `shouldBe` Just True
-                Nothing -> expectationFailure "Failed to upgrade user!"
-        it "is Nothing if there is no password hash" $ do
+            newuser `shouldBe` Nothing
+        it "is Nothing if there is no password hash (but salt non-empty)" $ do
             newuser <- upgradePasswordHash defaultStrength oldStyleBadUser1
             newuser `shouldBe` Nothing
-        it "is Nothing if there is no salt" $ do
-            newuser <- upgradePasswordHash defaultStrength oldStyleBadUser2
+
+      context "Upgrade of previously upgraded old-style user" $ do
+        it "is Nothing since salt is non-empty" $ do
+            newuser <- upgradePasswordHash defaultStrength oldStyleUpgradedUser
             newuser `shouldBe` Nothing
 
       context "Upgrade of new-style password hash to stronger setting" $ do
@@ -81,6 +82,17 @@ nonDBTests = do
         it "is Nothing if there is no password hash" $ do
             newuser <- upgradePasswordHash stronger newStyleBadUser
             newuser `shouldBe` Nothing
+
+      context "Upgrade of new-style hash in old-style format with blank salt" $ do
+        it "really does have a hash containing the new strength" $ do
+            newuser <- upgradePasswordHash stronger newStyleInOldFormat
+            let s = pack $ "|" ++ show stronger ++ "|"
+                found = fmap (s `isInfixOf`) $ newuser >>= oldStylePass
+            found `shouldBe` Just True
+        it "still verifies with the same password" $ do
+            newuser <- upgradePasswordHash stronger newStyleInOldFormat
+            let valid = newuser >>= flip validatePass mypassword
+            valid `shouldBe` Just True
 
 
     describe "setPassword" $ do

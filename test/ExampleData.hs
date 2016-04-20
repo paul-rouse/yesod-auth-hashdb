@@ -9,8 +9,10 @@ module ExampleData (
     oldStyleValidUser,
     oldStyleBadUser1,
     oldStyleBadUser2,
+    oldStyleUpgradedUser,
     newStyleValidUser,
     newStyleBadUser,
+    newStyleInOldFormat,
     stronger
 ) where
 
@@ -26,9 +28,9 @@ data OldStyleUser = OldStyleUser {
 instance HashDBUser OldStyleUser where
     userPasswordHash = oldStylePass
     userPasswordSalt = oldStyleSalt
-    setSaltAndPasswordHash s h u = u { oldStyleSalt = Just s,
-                                       oldStylePass = Just h
-                                     }
+    setPasswordHash h u = u { oldStyleSalt = Just "",
+                              oldStylePass = Just h
+                            }
 
 data NewStyleUser = NewStyleUser {
                         newStyleName :: Text,
@@ -68,6 +70,12 @@ oldStyleBadUser2 =
                  (Just "8e3e33029e71b4e25ba95a00a88c4bfeb93d766a")
                  Nothing
 
+oldStyleUpgradedUser :: OldStyleUser
+oldStyleUpgradedUser =
+    OldStyleUser "foo"
+                 (Just "sha256|17|GkImOI0oV9RyOE3oJpYKRg==|KPPYL9JaP6UQjwLVvRsK3Pw2tl1LWyjqlh11jjKRQVM=")
+                 (Just "somesalt")
+
 newStyleValidUser :: NewStyleUser
 newStyleValidUser =
     NewStyleUser "fox"
@@ -77,6 +85,12 @@ newStyleBadUser :: NewStyleUser
 newStyleBadUser =
     NewStyleUser "bad"
                  Nothing
+
+newStyleInOldFormat :: OldStyleUser
+newStyleInOldFormat =
+    OldStyleUser "fox"
+                 (Just "sha256|14|2hL7cNopkA/dGy/5CQTuSg==|CUTPW6ICMISSjohFep851f9PdqIn7Y4B75/I77BvEYM=")
+                 (Just "")
 
 stronger :: Int
 stronger = defaultStrength + 2
