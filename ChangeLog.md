@@ -1,3 +1,12 @@
+## 1.5
+
+This release can break both old code and old database entries.  For details
+of upgrading, please see
+[Upgrading.md](https://github.com/paul-rouse/yesod-auth-hashdb/blob/master/Upgrading.md).
+
+* First phase of removing compatibility with old databases designed for versions before 1.3
+* Remove deprecated utilities (`getAuthIdHashDB` and pre-defined `User` data type)
+
 ## 1.4.3
 
 * Changes to work with persistent-2.5
