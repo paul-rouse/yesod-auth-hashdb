@@ -1,15 +1,9 @@
 {-# LANGUAGE CPP                        #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE GADTs                      #-}
 -------------------------------------------------------------------------------
 -- |
 -- Module      :  Yesod.Auth.HashDB
