@@ -20,41 +20,13 @@
 -- Stability   :  Stable
 -- Portability :  Portable
 --
--- A yesod-auth AuthPlugin designed to look users up in a Persistent
+-- A Yesod authentication plugin designed to look users up in a Persistent
 -- database where the hash of their password is stored.
 --
--- This module was removed from @yesod-auth-1.3.0.0@ and is now
--- maintained separately.
--- Versions of this module prior to @yesod-auth-1.3@ used a relatively weak
--- hashing algorithm (a single round of SHA1) which does not provide
--- adequate protection against an attacker who discovers the hashed passwords.
--- See: <https://github.com/yesodweb/yesod/issues/668>.
---
--- It has now been rewritten to use "Crypto.PasswordStore", but this has been
--- done in a way which preserves compatibility both with the API and
--- with databases which have been set up using older versions of this module.
--- There are two levels of database compatibility:
---
--- * The verification code recognises both the old and new hash formats,
---   so passwords can be verified against database entries which still
---   contain old-style hashes.
---
--- * The function 'upgradePasswordHash' can be used to migrate
---   existing user records to use the new format hash.  Unlike
---   freshly created password hashes, entries converted this way
---   must still have the old salt field, since the old hash function
---   remains part of the algorithm needed for verification.  (The
---   new hash is layered on top of the old one.)
---
--- On the other hand, new passwords set up by 'setPassword' or
--- 'setPasswordStrength' no longer use a separate salt field, so new users
--- of this module need only provide a single password field in the user data,
--- and can ignore the salt.
---
--- In a system which has been migrated from the old format, passwords
--- which are reset will use the new format and will have an empty salt field.
--- Once all the entries are of this form, it is safe to change the model
--- to remove the salt, and change the 'HashDBUser' instance accordingly.
+-- __Release 1.5 is the first of two which remove compatibility with old__
+-- __(pre 1.3) databases.  Some other deprecated functionality is removed__
+-- __too.  Please see__
+-- __<https://github.com/paul-rouse/yesod-auth-hashdb/blob/master/Upgrading.md>__
 --
 -- To use this in a Yesod application, the foundation data type must be an
 -- instance of YesodPersist, and the username and hashed passwords should
@@ -69,9 +41,7 @@
 -- >     password Text Maybe   -- password hash for HashDB
 -- >     UniqueUser name
 --
--- Create an instance of 'HashDBUser' for this data type.  For historical
--- reasons "Yesod.Auth.HashDB" exports some names which are quite likely to
--- clash with your own, so it is a good idea to import just the ones you need:
+-- Create an instance of 'HashDBUser' for this data type:
 --
 -- > import Yesod.Auth.HashDB (HashDBUser(..))
 -- > ....
