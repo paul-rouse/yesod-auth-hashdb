@@ -121,22 +121,21 @@ module Yesod.Auth.HashDB
     , authHashDBWithForm
     ) where
 
-import Yesod.Persist
-import Yesod.Form
-import Yesod.Auth
-import Yesod.Core
-import qualified Yesod.Auth.Message as Msg
 
 #if __GLASGOW_HASKELL__ < 710
-import Control.Applicative         ((<$>), (<*>))
+import           Control.Applicative         ((<$>), (<*>))
 #endif
-
+import qualified Crypto.Hash           as CH (SHA1, Digest, hash)
+import           Crypto.PasswordStore        (makePassword, strengthenPassword,
+                                              verifyPassword, passwordStrength)
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
-import qualified Crypto.Hash as CH (SHA1, Digest, hash)
-import Data.Text                   (Text, pack, unpack, append)
-import Data.Maybe                  (fromMaybe)
-import Crypto.PasswordStore        (makePassword, verifyPassword,
-                                    passwordStrength, strengthenPassword)
+import           Data.Maybe                  (fromMaybe)
+import           Data.Text                   (Text, pack, unpack, append)
+import           Yesod.Auth
+import qualified Yesod.Auth.Message    as Msg
+import           Yesod.Core
+import           Yesod.Form
+import           Yesod.Persist
 
 -- | Default strength used for passwords (see "Crypto.PasswordStore" for
 --   details).
@@ -147,22 +146,22 @@ defaultStrength = 17
 --   be an instance of this class.  It just provides the getters and setters
 --   used by the functions in this module.
 class HashDBUser user where
-  -- | Retrieve password hash from user data
-  userPasswordHash :: user -> Maybe Text
-  -- | Retrieve salt for password from user data.  This is needed only for
-  --   compatibility with old database entries, which contain the salt
-  --   as a separate field.  New implementations do not require a separate
-  --   salt field in the user data, and should leave this as the default.
-  userPasswordSalt :: user -> Maybe Text
-  userPasswordSalt _ = Just ""
+    -- | Retrieve password hash from user data
+    userPasswordHash :: user -> Maybe Text
+    -- | Retrieve salt for password from user data.  This is needed only for
+    --   compatibility with old database entries, which contain the salt
+    --   as a separate field.  New implementations do not require a separate
+    --   salt field in the user data, and should leave this as the default.
+    userPasswordSalt :: user -> Maybe Text
+    userPasswordSalt _ = Just ""
 
-  -- | Callback for 'setPassword' and 'upgradePasswordHash'.  Produces a
-  --   version of the user data with the hash set to the new value.
-  --
-  setPasswordHash :: Text   -- ^ Password hash
-                     -> user -> user
+    -- | Callback for 'setPassword' and 'upgradePasswordHash'.  Produces a
+    --   version of the user data with the hash set to the new value.
+    --
+    setPasswordHash :: Text   -- ^ Password hash
+                       -> user -> user
 
-  {-# MINIMAL userPasswordHash, setPasswordHash #-}
+    {-# MINIMAL userPasswordHash, setPasswordHash #-}
 {-# DEPRECATED userPasswordSalt "Verification against old data containing a separate salt field will be removed in version 1.6" #-}
 
 
@@ -172,7 +171,7 @@ saltedHash :: Text              -- ^ Salt
            -> Text              -- ^ Password
            -> Text
 saltedHash salt pw =
-  pack $ show (CH.hash $ BS.pack $ unpack $ append salt pw :: CH.Digest CH.SHA1)
+    pack $ show (CH.hash $ BS.pack $ unpack $ append salt pw :: CH.Digest CH.SHA1)
 
 -- | Calculate a new-style password hash using "Crypto.PasswordStore".
 passwordHash :: MonadIO m => Int -> Text -> m Text
@@ -295,9 +294,9 @@ validateUser :: HashDBPersist site user =>
              -> Text            -- ^ Password in plaintext
              -> HandlerT site IO Bool
 validateUser userID passwd = do
-  -- Get user data
-  user <- runDB $ getBy userID
-  return $ fromMaybe False $ flip validatePass passwd . entityVal =<< user
+    -- Get user data
+    user <- runDB $ getBy userID
+    return $ fromMaybe False $ flip validatePass passwd . entityVal =<< user
 
 
 login :: AuthRoute
