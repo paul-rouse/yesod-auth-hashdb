@@ -55,6 +55,33 @@ test-suite test
                    , hspec
                    , text
 
+test-suite integration
+    type:            exitcode-stdio-1.0
+    main-is:         integration.hs
+    hs-source-dirs:  test
+    ghc-options:     -Wall
+    other-modules:   IntegrationTest
+                   , TestSite
+                   , TestTools
+    build-depends:   base >= 4 && < 5
+                   , bytestring
+                   , classy-prelude
+                   , containers
+                   , hspec                   >= 2.0.0
+                   , http-conduit
+                   , http-types
+                   , monad-logger
+                   , network-uri
+                   , persistent-sqlite
+                   , resourcet
+                   , text
+                   , wai-extra
+                   , yesod
+                   , yesod-auth
+                   , yesod-auth-hashdb
+                   , yesod-core
+                   , yesod-test              >= 1.4.3
+
 source-repository head
   type:     git
   location: https://github.com/paul-rouse/yesod-auth-hashdb
