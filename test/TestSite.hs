@@ -1,4 +1,7 @@
 {-# LANGUAGE CPP                        #-}
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE DeriveDataTypeable         #-}
+#endif
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -18,6 +21,7 @@ module TestSite (
 
 #if __GLASGOW_HASKELL__ < 710
 import Control.Applicative          ((<$>))
+import Data.Typeable                (Typeable)
 #endif
 import Data.Text
 import Database.Persist.Sqlite
@@ -36,6 +40,9 @@ User
     password   Text Maybe
     UniqueUser name
     deriving Show
+#if __GLASGOW_HASKELL__ < 710
+    deriving Typeable
+#endif
 |]
 
 instance HashDBUser User where
