@@ -30,6 +30,10 @@ import Yesod
 import Yesod.Auth
 import Yesod.Auth.HashDB            (HashDBUser(..), authHashDB)
 import Yesod.Auth.Message           (AuthMessage (InvalidLogin))
+#if MIN_VERSION_yesod_core(1,4,14)
+import Yesod.Core                   (defaultCsrfMiddleware,
+                                     defaultYesodMiddleware)
+#endif
 
 
 -- Trivial example site needing authentication
@@ -72,6 +76,10 @@ instance Yesod App where
             Just _  -> Authorized
     -- Other pages (HomeR and AuthR _) do not require login
     isAuthorized _ _ = return Authorized
+
+#if MIN_VERSION_yesod_core(1,4,14)
+    yesodMiddleware = defaultCsrfMiddleware . defaultYesodMiddleware
+#endif
 
 instance YesodPersist App where
     type YesodPersistBackend App = SqlBackend

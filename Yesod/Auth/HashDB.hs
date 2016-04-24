@@ -345,30 +345,35 @@ authHashDBWithForm form uniq =
 
 
 defaultForm :: Yesod app => Route app -> WidgetT app IO ()
-defaultForm loginRoute = toWidget [hamlet|
-$newline never
-    <div id="header">
+defaultForm loginRoute = do
+    request <- getRequest
+    let mtok = reqToken request
+    toWidget [hamlet|
+      $newline never
+      <div id="header">
         <h1>Login
 
-    <div id="login">
+      <div id="login">
         <form method="post" action="@{loginRoute}">
-            <table>
-                <tr>
-                    <th>Username:
-                    <td>
-                        <input id="x" name="username" autofocus="" required>
-                <tr>
-                    <th>Password:
-                    <td>
-                        <input type="password" name="password" required>
-                <tr>
-                    <td>&nbsp;
-                    <td>
-                        <input type="submit" value="Login">
+          $maybe tok <- mtok
+            <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+          <table>
+            <tr>
+              <th>Username:
+              <td>
+                <input id="x" name="username" autofocus="" required>
+            <tr>
+              <th>Password:
+              <td>
+                <input type="password" name="password" required>
+            <tr>
+              <td>&nbsp;
+              <td>
+                <input type="submit" value="Login">
 
-            <script>
-                if (!("autofocus" in document.createElement("input"))) {
-                    document.getElementById("x").focus();
-                }
+          <script>
+            if (!("autofocus" in document.createElement("input"))) {
+                document.getElementById("x").focus();
+            }
 
-|]
+    |]

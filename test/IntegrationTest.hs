@@ -43,7 +43,15 @@ integrationSpec = do
         YT.bodyContains "OK, you are logged in so you are allowed to see this!"
       it "can't be accessed after login then logout" $ do
         _ <- doLogin "paul" "MyPassword"
-        YT.post $ AuthR LogoutR
+        YT.get $ AuthR LogoutR
+        -- That `get` will get the form from Yesod.Core.Handler.redirectToPost
+        -- which will not be submitted automatically without javascript
+        YT.bodyContains "please click on the button below to be redirected"
+        -- so we do the redirection ourselves:
+        YT.request $ do
+            YT.setMethod "POST"
+            YT.setUrl $ AuthR LogoutR
+            YT.addToken
         YT.get HomeR
         YT.statusIs 200
         YT.bodyContains "Your current auth ID: Nothing"

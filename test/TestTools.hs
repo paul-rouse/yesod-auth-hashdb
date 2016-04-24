@@ -71,6 +71,7 @@ submitLogin user pass = do
         setUrl $ urlPathB $ testRoot ++ "/auth/page/hashdb/login"
         addPostParam "username" user
         addPostParam "password" pass
+        addToken
     extractLocation  -- Successful login should redirect to the home page
 
 extractLocation :: YesodExample App (Maybe ByteString)
