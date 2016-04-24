@@ -12,7 +12,7 @@ import Test.Hspec                   (Spec, SpecWith, before,
                                      describe, context, it)
 import qualified Yesod.Test as YT
 
-import TestSite                     (App, Route(..), needCSRFToken)
+import TestSite                     (App, Route(..), Handler, runDB)
 import TestTools
 
 #if MIN_VERSION_yesod_test(1,5,0)
@@ -51,8 +51,7 @@ integrationSpec = do
         YT.request $ do
             YT.setMethod "POST"
             YT.setUrl $ AuthR LogoutR
-            when needCSRFToken
-                YT.addToken
+            YT.addToken
         YT.get HomeR
         YT.statusIs 200
         YT.bodyContains "Your current auth ID: Nothing"

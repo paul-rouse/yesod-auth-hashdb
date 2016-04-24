@@ -12,7 +12,7 @@ module TestTools (
     StdMethod(..)
 ) where
 
-import TestSite           (App(..), needCSRFToken)
+import TestSite           (App(..))
 import ClassyPrelude
 import Yesod.Core         (RedirectUrl)
 import Yesod.Test
@@ -71,8 +71,7 @@ submitLogin user pass = do
         setUrl $ urlPathB $ testRoot ++ "/auth/page/hashdb/login"
         addPostParam "username" user
         addPostParam "password" pass
-        when needCSRFToken
-            addToken
+        addToken
     extractLocation  -- Successful login should redirect to the home page
 
 extractLocation :: YesodExample App (Maybe ByteString)
