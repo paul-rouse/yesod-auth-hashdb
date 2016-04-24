@@ -355,8 +355,10 @@ defaultForm loginRoute = do
 
       <div id="login">
         <form method="post" action="@{loginRoute}">
+#if MIN_VERSION_yesod_core(1,4,14)
           $maybe tok <- mtok
             <input type=hidden name=#{defaultCsrfParamName} value=#{tok}>
+#endif
           <table>
             <tr>
               <th>Username:

@@ -11,6 +11,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 
 module TestSite (
+    needCSRFToken,
     User(..),
     migrateAll,
     App(..),
@@ -33,6 +34,14 @@ import Yesod.Auth.Message           (AuthMessage (InvalidLogin))
 #if MIN_VERSION_yesod_core(1,4,14)
 import Yesod.Core                   (defaultCsrfMiddleware,
                                      defaultYesodMiddleware)
+#endif
+
+needCSRFToken :: Bool
+needCSRFToken =
+#if MIN_VERSION_yesod_core(1,4,14)
+    True
+#else
+    False
 #endif
 
 
