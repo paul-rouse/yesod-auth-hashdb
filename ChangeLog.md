@@ -1,3 +1,7 @@
+## 1.5.1
+
+* Include CSRF token in default form
+
 ## 1.5
 
 This release can break both old code and old database entries.  For details
