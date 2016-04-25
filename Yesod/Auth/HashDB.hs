@@ -131,6 +131,11 @@ import           Yesod.Core
 import           Yesod.Form
 import           Yesod.Persist
 
+#if !MIN_VERSION_yesod_core(1,4,14)
+defaultCsrfParamName :: Text
+defaultCsrfParamName = "_token"
+#endif
+
 -- | Default strength used for passwords (see "Crypto.PasswordStore" for
 --   details).
 defaultStrength :: Int

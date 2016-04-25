@@ -77,7 +77,9 @@ instance Yesod App where
     -- Other pages (HomeR and AuthR _) do not require login
     isAuthorized _ _ = return Authorized
 
-#if MIN_VERSION_yesod_core(1,4,14)
+#if MIN_VERSION_yesod_core(1,4,19) || (MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4))
+    -- Include CSRF middleware if it is available in yesod-core and we can test
+    -- using it in all our cases (see Integration.hs for additional comment).
     yesodMiddleware = defaultCsrfMiddleware . defaultYesodMiddleware
 #endif
 

@@ -25,7 +25,6 @@ withApp :: App -> SpecWith App -> Spec
 withApp app = before $ return app
 #endif
 
-
 integrationSpec :: SpecWith MyTestApp
 integrationSpec = do
     describe "The home page" $ do
@@ -51,7 +50,15 @@ integrationSpec = do
         YT.request $ do
             YT.setMethod "POST"
             YT.setUrl $ AuthR LogoutR
+#if MIN_VERSION_yesod_core(1,4,19)
+            -- yesod-core-1.4.19 added the CSRF token to the redirectToPost form
             YT.addToken
+#elif MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
+            -- Otherwise we still use CSRF middleware (see TestSite.hs) from
+            -- yesod-core 1.4.14 onwards as long as we can get the token
+            -- from the cookie, which was implemented in yesod-test-1.4.4
+            YT.addTokenFromCookie
+#endif
         YT.get HomeR
         YT.statusIs 200
         YT.bodyContains "Your current auth ID: Nothing"
