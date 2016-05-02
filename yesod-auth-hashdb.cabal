@@ -27,6 +27,7 @@ description:
     package.  (Note that other authentication plugins may be more appropriate
     if you wish to use email verification to set up accounts).
 extra-source-files:  ChangeLog.md
+                     stack.yaml
 
 library
     build-depends:   base                    >= 4          && < 5
