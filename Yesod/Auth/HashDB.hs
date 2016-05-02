@@ -101,6 +101,10 @@
 -- >     <input type="password" name="password">
 -- >     <input type="submit" value="Login">
 --
+-- If a CSRF token needs to be embedded in a custom form, code must be
+-- included in the widget to add it - see @defaultForm@ in the source
+-- code of this module for an example.
+--
 -------------------------------------------------------------------------------
 module Yesod.Auth.HashDB
     ( HashDBUser(..)
