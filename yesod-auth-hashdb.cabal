@@ -66,7 +66,7 @@ test-suite integration
                    , TestTools
     build-depends:   base >= 4 && < 5
                    , bytestring
-                   , classy-prelude
+                   , basic-prelude
                    , containers
                    , hspec                   >= 2.0.0
                    , http-conduit

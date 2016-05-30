@@ -7,7 +7,7 @@ module IntegrationTest (
     integrationSpec
 ) where
 
-import ClassyPrelude
+import BasicPrelude
 import Test.Hspec                   (Spec, SpecWith, before,
                                      describe, context, it)
 import qualified Yesod.Test as YT
