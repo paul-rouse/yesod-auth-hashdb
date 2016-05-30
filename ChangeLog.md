@@ -1,3 +1,8 @@
+## 1.5.1.1
+
+* Minor documentation improvement
+* Reduce external-library dependencies for tests
+
 ## 1.5.1
 
 * Include CSRF token in default form
