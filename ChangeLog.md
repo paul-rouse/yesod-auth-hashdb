@@ -1,3 +1,11 @@
+## 1.6
+
+This release completes the breaking changes started in 1.5.  For details
+of upgrading, please see
+[Upgrading.md](https://github.com/paul-rouse/yesod-auth-hashdb/blob/master/Upgrading.md).
+
+* Complete removal of compatibility with old databases designed for versions before 1.3
+
 ## 1.5.1.1
 
 * Minor documentation improvement

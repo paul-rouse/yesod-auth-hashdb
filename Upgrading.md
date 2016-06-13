@@ -1,3 +1,13 @@
+Upgrading to Version 1.6
+========================
+
+Version 1.6 completes the removal of deprecated functionality for working
+with password hashes originally created by versions before 1.3.  This
+release can no longer be used to verify passwords using hashes stored in
+the old format.  Before moving to 1.6, you should ensure that any old code
+and database entries have been upgraded as described below for version 1.5.
+
+
 Upgrading to Version 1.5
 ========================
 

@@ -12,13 +12,16 @@ module ExampleData (
     oldStyleUpgradedUser,
     newStyleValidUser,
     newStyleBadUser,
-    newStyleInOldFormat,
     stronger
 ) where
 
 import Yesod.Auth.HashDB (HashDBUser(..), defaultStrength)
 import Data.Text (Text)
 
+-- OldStyleUser is retained in the tests so that naive (incorrect)
+-- upgrading can be tested; the naive upgrade consists of removing
+-- the `userPasswordSalt` method without setting new passwords which
+-- have empty salt.
 data OldStyleUser = OldStyleUser {
                         oldStyleName :: Text,
                         oldStylePass :: Maybe Text,
@@ -27,7 +30,6 @@ data OldStyleUser = OldStyleUser {
 
 instance HashDBUser OldStyleUser where
     userPasswordHash = oldStylePass
-    userPasswordSalt = oldStyleSalt
     setPasswordHash h u = u { oldStyleSalt = Just "",
                               oldStylePass = Just h
                             }
@@ -85,12 +87,6 @@ newStyleBadUser :: NewStyleUser
 newStyleBadUser =
     NewStyleUser "bad"
                  Nothing
-
-newStyleInOldFormat :: OldStyleUser
-newStyleInOldFormat =
-    OldStyleUser "fox"
-                 (Just "sha256|14|2hL7cNopkA/dGy/5CQTuSg==|CUTPW6ICMISSjohFep851f9PdqIn7Y4B75/I77BvEYM=")
-                 (Just "")
 
 stronger :: Int
 stronger = defaultStrength + 2

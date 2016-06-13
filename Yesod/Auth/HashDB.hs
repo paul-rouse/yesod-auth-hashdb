@@ -17,9 +17,8 @@
 -- A Yesod authentication plugin designed to look users up in a Persistent
 -- database where the hash of their password is stored.
 --
--- __Release 1.5 is the first of two which remove compatibility with old__
--- __(pre 1.3) databases.  Some other deprecated functionality is removed__
--- __too.  Please see__
+-- __Releases 1.6 finishes the process of removing compatibility with old__
+-- __(pre 1.3) databases.  Please see__
 -- __<https://github.com/paul-rouse/yesod-auth-hashdb/blob/master/Upgrading.md>__
 --
 -- To use this in a Yesod application, the foundation data type must be an
@@ -123,12 +122,11 @@ module Yesod.Auth.HashDB
 #if __GLASGOW_HASKELL__ < 710
 import           Control.Applicative         ((<$>), (<*>))
 #endif
-import qualified Crypto.Hash           as CH (SHA1, Digest, hash)
 import           Crypto.PasswordStore        (makePassword, strengthenPassword,
                                               verifyPassword, passwordStrength)
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
 import           Data.Maybe                  (fromMaybe)
-import           Data.Text                   (Text, pack, unpack, append)
+import           Data.Text                   (Text, pack, unpack)
 import           Yesod.Auth
 import qualified Yesod.Auth.Message    as Msg
 import           Yesod.Core
@@ -146,35 +144,22 @@ defaultStrength :: Int
 defaultStrength = 17
 
 -- | The type representing user information stored in the database should
---   be an instance of this class.  It just provides the getters and setters
+--   be an instance of this class.  It just provides the getter and setter
 --   used by the functions in this module.
 class HashDBUser user where
-    -- | Retrieve password hash from user data
+    -- | Getter used by 'validatePass' and 'upgradePasswordHash' to
+    --   retrieve the password hash from user data
+    --
     userPasswordHash :: user -> Maybe Text
-    -- | Retrieve salt for password from user data.  This is needed only for
-    --   compatibility with old database entries, which contain the salt
-    --   as a separate field.  New implementations do not require a separate
-    --   salt field in the user data, and should leave this as the default.
-    userPasswordSalt :: user -> Maybe Text
-    userPasswordSalt _ = Just ""
 
-    -- | Callback for 'setPassword' and 'upgradePasswordHash'.  Produces a
+    -- | Setter used by 'setPassword' and 'upgradePasswordHash'.  Produces a
     --   version of the user data with the hash set to the new value.
     --
     setPasswordHash :: Text   -- ^ Password hash
                        -> user -> user
 
     {-# MINIMAL userPasswordHash, setPasswordHash #-}
-{-# DEPRECATED userPasswordSalt "Verification against old data containing a separate salt field will be removed in version 1.6" #-}
 
-
--- | Calculate salted hash using SHA1.  Retained for compatibility with
---   hashes in existing databases, but will not be used for new passwords.
-saltedHash :: Text              -- ^ Salt
-           -> Text              -- ^ Password
-           -> Text
-saltedHash salt pw =
-    pack $ show (CH.hash $ BS.pack $ unpack $ append salt pw :: CH.Digest CH.SHA1)
 
 -- | Calculate a new-style password hash using "Crypto.PasswordStore".
 passwordHash :: MonadIO m => Int -> Text -> m Text
@@ -200,11 +185,6 @@ setPassword :: (MonadIO m, HashDBUser user) => Text -> user -> m user
 setPassword = setPasswordStrength defaultStrength
 
 -- | Validate a plaintext password against the hash in the user data structure.
---   This function retains compatibility with user data produced by old
---   versions of this module (prior to 1.3), although the hashes are less
---   secure and should be upgraded as soon as possible.  They can be
---   upgraded using 'upgradePasswordHash', or by insisting that users set
---   new passwords.
 --
 --   The result distinguishes two types of validation failure, which may
 --   be useful in an application which supports multiple authentication
@@ -213,27 +193,24 @@ setPassword = setPasswordStrength defaultStrength
 --   * Just False - the user has a password set up, but the given one does
 --     not match it
 --
---   * Nothing - the user does not have a password (the hash is Nothing)
+--   * Nothing - the user does not have a password ('userPasswordHash' returns
+--     Nothing)
 --
 --   Since 1.4.1
 --
 validatePass :: HashDBUser u => u -> Text -> Maybe Bool
 validatePass user passwd = do
     hash <- userPasswordHash user
-    salt <- userPasswordSalt user
-    -- NB plaintext password characters are truncated to 8 bits here, and also
-    -- in saltedHash and passwordHash above (the hash and old salt are already
-    -- 8 bit).  This is for historical compatibility, but in practice it is
+    -- NB plaintext password characters are truncated to 8 bits here,
+    -- and also in passwordHash above (the hash is already 8 bit).
+    -- This is for historical compatibility, but in practice it is
     -- unlikely to reduce the entropy of most users' alphabets by much.
     let hash' = BS.pack $ unpack hash
-        passwd' = BS.pack $ unpack $ if salt == "" then passwd
-                                     else
-                                         -- Extra layer for an upgraded old hash
-                                         saltedHash salt passwd
+        passwd' = BS.pack $ unpack passwd
     if passwordStrength hash' > 0
-        -- Will give >0 for new-style hash, else fall back
+        -- Will give >0 for valid hash format, else treat as if wrong password
         then return $ verifyPassword passwd' hash'
-        else return $ hash == saltedHash salt passwd
+        else return False
 
 -- | Upgrade existing user credentials to a stronger hash.  The existing
 --   hash will have been produced from a weaker setting in the current
@@ -246,25 +223,21 @@ validatePass user passwd = do
 --   but may have been upgraded using earlier versions of this function.
 --
 --   Returns Nothing if the user has no password (ie if 'userPasswordHash' u
---   is 'Nothing'), if the password hash is not in the new format, or if the
---   user has a non-empty salt field resulting from the old-style hashing
---   algorithm.
+--   is 'Nothing') or if the password hash is not in the correct format.
+--
 upgradePasswordHash :: (MonadIO m, HashDBUser user) => Int -> user -> m (Maybe user)
 upgradePasswordHash strength u = do
     let old = userPasswordHash u
-        oldSalt = fromMaybe "" $ userPasswordSalt u
     case old of
         Just oldHash -> do
             let oldHash' = BS.pack $ unpack oldHash
             if passwordStrength oldHash' > 0
               then
-                -- Already a new-style hash, so only strengthen it as needed
+                -- Valid hash format, so strengthen it as needed
                 let newHash = pack $ BS.unpack $ strengthenPassword oldHash' strength
-                in if oldSalt == ""
-                   then return $ Just $ setPasswordHash newHash u
-                   else return Nothing   -- Can't handle non-empty salt
+                in return $ Just $ setPasswordHash newHash u
               else do
-                -- Old-style hash: cannot upgrade
+                -- Invalid hash format (perhaps from old version of this module)
                 return Nothing
         Nothing -> return Nothing
 

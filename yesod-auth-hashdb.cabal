@@ -1,5 +1,5 @@
 name:            yesod-auth-hashdb
-version:         1.5.1.1
+version:         1.6
 license:         MIT
 license-file:    LICENSE
 author:          Patrick Brisbin, later changes Paul Rouse
@@ -39,7 +39,6 @@ library
                    , persistent              >= 2.1        && < 2.6
                    , yesod-form              >= 1.4        && < 1.5
                    , pwstore-fast            >= 2.2
-                   , cryptohash              >= 0.8
 
     exposed-modules: Yesod.Auth.HashDB
     ghc-options:     -Wall
