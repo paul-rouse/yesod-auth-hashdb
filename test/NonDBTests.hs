@@ -62,7 +62,7 @@ nonDBTests = do
         it "silently succeeds producing a password which won't verify as it still needs salt" $ do
             newuser <- upgradePasswordHash defaultStrength oldStyleUpgradedUser
             case newuser of
-              Nothing -> newuser `shouldNotBe` Nothing
+              Nothing -> expectationFailure "should not produce Nothing"
               Just u  -> validatePass u mypassword `shouldBe` Just False
 
       context "Upgrade of new-style password hash to stronger setting" $ do
