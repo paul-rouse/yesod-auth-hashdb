@@ -159,7 +159,7 @@ module Yesod.Auth.HashDB
 
 
 #if __GLASGOW_HASKELL__ < 710
-import           Control.Applicative         ((<$>), (<*>))
+import           Control.Applicative         ((<$>), (<*>), pure)
 #endif
 import           Crypto.PasswordStore        (makePassword, strengthenPassword,
                                               verifyPassword, passwordStrength)
