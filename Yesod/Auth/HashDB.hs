@@ -104,30 +104,36 @@
 -- included in the widget to add it - see @defaultForm@ in the source
 -- code of this module for an example.
 --
--- == #json# JSON Interface
+-- == JSON Interface
 --
--- This plugin provides sufficient tools to build a full JSON flow, in
--- which all of the URLs needed are passed to the client in JSON data.
+-- This plugin provides sufficient tools to build a complete JSON-based
+-- authentication flow.  We assume that a design goal is to avoid URLs
+-- being built into the client, so all of the URLs needed are passed in
+-- JSON data.
 --
--- First of all, 'Yesod.Auth' generates a JSON response when authentication
--- is required, and the "Accept" header requests "application/json".  This
--- contains the URL which leads to the 'loginHandler'.
+-- To start the process, Yesod's defaultErrorHandler produces a JSON
+-- response if the HTTP Accept header gives \"application/json\"
+-- precedence over HTML.  For a NotAuthenticated error, the status is
+-- 401 and the response contains the URL to use for authentication: this
+-- is the route which will be handled by the loginHandler method of the
+-- YesodAuth instance, which normally returns a login form.
 --
--- Leaving the 'loginHandler' aside for a moment, the last step - supported
--- by this plugin since version 1.6 - is that the credentials are
--- submitted in a JSON object, and authentication is performed.  The
--- supplied oject must have properties "username" and "password".
+-- Leaving the loginHandler aside for a moment, the final step - supported
+-- by this plugin since version 1.6 - is to POST the credentials for
+-- authentication in a JSON object.  This object must include the
+-- properties "username" and "password".  In the HTML case this would be
+-- the form submission, but here we want to use JSON instead.
 --
--- In the JSON case, the main purpose of the 'loginHandler' is to tell the
--- client the URL for submitting credentials (assuming that avoiding
--- built-in URLs is a design goal).  A custom 'loginHandler' must be
--- provided by the application, but the correct URL for this plugin can
--- be obtained by using the 'submitRouteHashDB' function.
+-- In a JSON interface, the purpose of the loginHandler is to tell the
+-- client the URL for submitting the credentials.  This requires a
+-- custom loginHandler, since the default one generates HTML only.
+-- It can find the correct URL by using the 'submitRouteHashDB'
+-- function defined in this module.
 --
--- Writing the 'loginHandler' is made a little complicated by the fact that
--- it must return Html content, not JSON; a short-circuit response has
--- to be used for the JSON.  Here is an example which is geared around using
--- HashDB on its own:
+-- Writing the loginHandler is made a little messy by the fact that its
+-- type allows only HTML content.  A work-around is to send JSON as a
+-- short-circuit response.  Here is an example which is geared around using
+-- HashDB on its own, supporting both JSON and HTML clients:
 --
 -- > instance YesodAuth App where
 -- >    ....
@@ -332,7 +338,7 @@ login = PluginR "hashdb" ["login"]
 --   username (whatever it might be) to unique user ID.
 --
 --   Since version 1.6, the data may be submitted as a JSON object.
---   See the #json JSON Interface section above for more details.
+--   See the \"JSON Interface\" section above for more details.
 postLoginR :: HashDBPersist site user =>
               (Text -> Maybe (Unique user))
            -> HandlerT Auth (HandlerT site IO) TypedContent
@@ -421,7 +427,7 @@ defaultForm loginRoute = do
 -- | The route, in the parent site, to which the username and password
 --   should be sent in order to log in.  This function is particularly
 --   useful in constructing a 'loginHandler' function which provides a
---   JSON response.  See the #json JSON Interface section above for more
+--   JSON response.  See the \"JSON Interface\" section above for more
 --   details.
 --
 --   Since 1.6
