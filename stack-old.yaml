@@ -1,0 +1,7 @@
+# The integration tests require at least yesod-test-1.5.0.1, so for lts-2 and
+# lts-3 put in an extra dep, and pull in this stack-old.yaml in .travis.yml
+resolver: lts-2.22
+packages: 
+- .
+extra-deps:
+- yesod-test-1.5.0.1

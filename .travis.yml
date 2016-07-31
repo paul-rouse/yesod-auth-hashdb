@@ -16,9 +16,9 @@ matrix:
   include:
   - env: ARGS=""
     compiler: ": # Default"
-  - env: ARGS="--resolver lts-2"
+  - env: ARGS="--resolver lts-2 --stack-yaml stack-old.yaml"
     compiler: ": # lts-2"
-  - env: ARGS="--resolver lts-3"
+  - env: ARGS="--resolver lts-3 --stack-yaml stack-old.yaml"
     compiler: ": # lts-3"
   - env: ARGS="--resolver lts-4"
     compiler: ": # lts-4"

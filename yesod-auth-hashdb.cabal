@@ -83,7 +83,7 @@ test-suite integration
                    , yesod-auth
                    , yesod-auth-hashdb
                    , yesod-core
-                   , yesod-test              >= 1.4.3
+                   , yesod-test              >= 1.5.0.1
 
 source-repository head
   type:     git
