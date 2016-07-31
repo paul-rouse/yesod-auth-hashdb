@@ -18,9 +18,15 @@ import qualified Yesod.Test as YT
 import TestSite                     (App, Route(..), Handler, runDB)
 import TestTools
 
+#if MIN_VERSION_yesod_test(1,5,0)
 type MyTestApp = YT.TestApp App
 withApp :: App -> SpecWith (YT.TestApp App) -> Spec
 withApp app = before $ return (app, id)
+#else
+type MyTestApp = App
+withApp :: App -> SpecWith App -> Spec
+withApp app = before $ return app
+#endif
 
 authUrl :: Text
 authUrl = "http://localhost:3000/auth/login"
@@ -74,7 +80,7 @@ integrationSpec = do
 #if MIN_VERSION_yesod_core(1,4,19)
             -- yesod-core-1.4.19 added the CSRF token to the redirectToPost form
             YT.addToken
-#elif MIN_VERSION_yesod_core(1,4,14)
+#elif MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
             -- Otherwise we still use CSRF middleware (see TestSite.hs) from
             -- yesod-core 1.4.14 onwards as long as we can get the token
             -- from the cookie, which was implemented in yesod-test-1.4.4
@@ -116,7 +122,7 @@ integrationSpec = do
             login = JSON.decode =<< body :: Maybe LoginUrl
         YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
       it "Sending JSON username and password produces JSON success message" $ do
-#if MIN_VERSION_yesod_core(1,4,14)
+#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
         -- This first request is only to get the CSRF token cookie
         -- if we need it below
         YT.request $ do
@@ -130,7 +136,7 @@ integrationSpec = do
           YT.addRequestHeader ("Accept", "application/json")
           YT.addRequestHeader ("Content-Type", "application/json; charset=utf-8")
           YT.setRequestBody "{\"username\":\"paul\",\"password\":\"MyPassword\"}"
-#if MIN_VERSION_yesod_core(1,4,14)
+#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
           -- Add the CSRF token (see comment above for circumstances)
           YT.addTokenFromCookie
 #endif
