@@ -5,6 +5,7 @@ of upgrading, please see
 [Upgrading.md](https://github.com/paul-rouse/yesod-auth-hashdb/blob/master/Upgrading.md).
 
 * Complete removal of compatibility with old databases designed for versions before 1.3
+* Add JSON support
 
 ## 1.5.1.1
 

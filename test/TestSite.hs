@@ -23,12 +23,14 @@ module TestSite (
 import Control.Applicative          ((<$>))
 import Data.Typeable                (Typeable)
 #endif
+import Control.Monad                (when)
 import Data.Text
 import Database.Persist.Sqlite
 import Network.HTTP.Client.Conduit  (Manager)
 import Yesod
 import Yesod.Auth
-import Yesod.Auth.HashDB            (HashDBUser(..), authHashDB)
+import Yesod.Auth.HashDB            (HashDBUser(..), authHashDB,
+                                     submitRouteHashDB)
 import Yesod.Auth.Message           (AuthMessage (InvalidLogin))
 #if MIN_VERSION_yesod_core(1,4,14)
 import Yesod.Core                   (defaultCsrfMiddleware,
@@ -104,6 +106,19 @@ instance YesodAuth App where
     authPlugins _ = [ authHashDB (Just . UniqueUser) ]
 
     authHttpManager = appHttpManager
+
+    loginHandler = do
+        submission <- submitRouteHashDB
+        render <- lift getUrlRender
+        dflt <- defaultLoginHandler
+        typedContent@(TypedContent ct _) <- selectRep $ do
+            provideRep $ return dflt
+            provideJson $ object [("loginUrl", toJSON $ render submission)]
+        when (ct == typeJson) $
+            -- Short-circuit JSON response, but must still "return" Html
+            -- below to get correct type for loginHandler
+            sendResponse typedContent
+        return dflt
 
 instance YesodAuthPersist App
 

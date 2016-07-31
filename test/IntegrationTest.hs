@@ -8,6 +8,9 @@ module IntegrationTest (
 ) where
 
 import BasicPrelude
+import Data.Aeson                   (FromJSON, parseJSON, (.:))
+import qualified Data.Aeson as JSON
+import Network.Wai.Test             (simpleBody)
 import Test.Hspec                   (Spec, SpecWith, before,
                                      describe, context, it)
 import qualified Yesod.Test as YT
@@ -24,6 +27,30 @@ type MyTestApp = App
 withApp :: App -> SpecWith App -> Spec
 withApp app = before $ return app
 #endif
+
+authUrl :: Text
+authUrl = "http://localhost:3000/auth/login"
+
+data AuthUrl = AuthUrl Text deriving Eq
+instance FromJSON AuthUrl where
+    parseJSON (JSON.Object v) = AuthUrl <$> v .: "authentication_url"
+    parseJSON _ = mempty
+
+loginUrl :: Text
+loginUrl = "http://localhost:3000/auth/page/hashdb/login"
+
+data LoginUrl = LoginUrl Text deriving Eq
+instance FromJSON LoginUrl where
+    parseJSON (JSON.Object v) = LoginUrl <$> v .: "loginUrl"
+    parseJSON _ = mempty
+
+successMsg :: Text
+successMsg = "Login Successful"
+
+data SuccessMsg = SuccessMsg Text deriving Eq
+instance FromJSON SuccessMsg where
+    parseJSON (JSON.Object v) = SuccessMsg <$> v .: "message"
+    parseJSON _ = mempty
 
 integrationSpec :: SpecWith MyTestApp
 integrationSpec = do
@@ -70,5 +97,51 @@ integrationSpec = do
         loc <- doLoginPart1 "paul" "WrongPassword"
         checkFailedLogin loc
       it "fails when unknown user name given" $ do
-        loc <- doLoginPart1 "paul" "WrongPassword"
+        loc <- doLoginPart1 "xyzzy" "WrongPassword"
         checkFailedLogin loc
+
+    describe "JSON Login" $ do
+      it "JSON access to protected page gives JSON object with auth URL" $ do
+        YT.request $ do
+          YT.setMethod "GET"
+          YT.setUrl ProtectedR
+          YT.addRequestHeader ("Accept", "application/json")
+        YT.statusIs 401
+        resp <- YT.getResponse
+        let body = simpleBody <$> resp
+            auth = JSON.decode =<< body :: Maybe AuthUrl
+        YT.assertEqual "Authentication URL" auth (Just $ AuthUrl authUrl)
+      it "Custom loginHandler using submitRouteHashDB has correct URL in JSON" $ do
+        YT.request $ do
+          YT.setMethod "GET"
+          YT.setUrl authUrl
+          YT.addRequestHeader ("Accept", "application/json")
+        YT.statusIs 200
+        resp <- YT.getResponse
+        let body = simpleBody <$> resp
+            login = JSON.decode =<< body :: Maybe LoginUrl
+        YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
+      it "Sending JSON username and password produces JSON success message" $ do
+#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
+        -- This first request is only to get the CSRF token cookie
+        -- if we need it below
+        YT.request $ do
+          YT.setMethod "GET"
+          YT.setUrl authUrl
+          YT.addRequestHeader ("Accept", "application/json")
+#endif
+        YT.request $ do
+          YT.setMethod "POST"
+          YT.setUrl loginUrl
+          YT.addRequestHeader ("Accept", "application/json")
+          YT.addRequestHeader ("Content-Type", "application/json; charset=utf-8")
+          YT.setRequestBody "{\"username\":\"paul\",\"password\":\"MyPassword\"}"
+#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
+          -- Add the CSRF token (see comment above for circumstances)
+          YT.addTokenFromCookie
+#endif
+        YT.statusIs 200
+        resp <- YT.getResponse
+        let body = simpleBody <$> resp
+            msg = JSON.decode =<< body :: Maybe SuccessMsg
+        YT.assertEqual "Login success" msg (Just $ SuccessMsg successMsg)

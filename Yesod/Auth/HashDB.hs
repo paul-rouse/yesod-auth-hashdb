@@ -104,6 +104,44 @@
 -- included in the widget to add it - see @defaultForm@ in the source
 -- code of this module for an example.
 --
+-- == #json# JSON Interface
+--
+-- This plugin provides sufficient tools to build a full JSON flow, in
+-- which all of the URLs needed are passed to the client in JSON data.
+--
+-- First of all, 'Yesod.Auth' generates a JSON response when authentication
+-- is required, and the "Accept" header requests "application/json".  This
+-- contains the URL which leads to the 'loginHandler'.
+--
+-- Leaving the 'loginHandler' aside for a moment, the last step - supported
+-- by this plugin since version 1.6 - is that the credentials are
+-- submitted in a JSON object, and authentication is performed.  The
+-- supplied oject must have properties "username" and "password".
+--
+-- In the JSON case, the main purpose of the 'loginHandler' is to tell the
+-- client the URL for submitting credentials (assuming that avoiding
+-- built-in URLs is a design goal).  A custom 'loginHandler' must be
+-- provided by the application, but the correct URL for this plugin can
+-- be obtained by using the 'submitRouteHashDB' function.
+--
+-- Writing the 'loginHandler' is made a little complicated by the fact that
+-- it must return Html content, not JSON; a short-circuit response has
+-- to be used for the JSON.  Here is an example which is geared around using
+-- HashDB on its own:
+--
+-- > instance YesodAuth App where
+-- >    ....
+-- >    loginHandler = do
+-- >         submission <- submitRouteHashDB
+-- >         render <- lift getUrlRender
+-- >         dflt <- defaultLoginHandler
+-- >         typedContent@(TypedContent ct _) <- selectRep $ do
+-- >             provideRep $ return dflt
+-- >             provideJson $ object [("loginUrl", toJSON $ render submission)]
+-- >         when (ct == typeJson) $
+-- >             sendResponse typedContent   -- Short-circuit JSON response
+-- >         return dflt                     -- Html response
+--
 -------------------------------------------------------------------------------
 module Yesod.Auth.HashDB
     ( HashDBUser(..)
@@ -116,6 +154,7 @@ module Yesod.Auth.HashDB
     , validateUser
     , authHashDB
     , authHashDBWithForm
+    , submitRouteHashDB
     ) where
 
 
@@ -124,6 +163,7 @@ import           Control.Applicative         ((<$>), (<*>))
 #endif
 import           Crypto.PasswordStore        (makePassword, strengthenPassword,
                                               verifyPassword, passwordStrength)
+import           Data.Aeson                  ((.:?))
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
 import           Data.Maybe                  (fromMaybe)
 import           Data.Text                   (Text, pack, unpack)
@@ -261,6 +301,15 @@ type HashDBPersist master user =
     , PersistEntity user
     )
 
+-- Internal data type for receiving JSON encoded username and password
+data UserPass = UserPass (Maybe Text) (Maybe Text)
+
+instance FromJSON UserPass where
+    parseJSON (Object v) = UserPass <$>
+                           v .:? "username" <*>
+                           v .:? "password"
+    parseJSON _          = pure $ UserPass Nothing Nothing
+
 -- | Given a user ID and password in plaintext, validate them against
 --   the database values.  This function simply looks up the user id in the
 --   database and calls 'validatePass' to do the work.
@@ -281,13 +330,21 @@ login = PluginR "hashdb" ["login"]
 
 -- | Handle the login form. First parameter is function which maps
 --   username (whatever it might be) to unique user ID.
+--
+--   Since version 1.6, the data may be submitted as a JSON object.
+--   See the #json JSON Interface section above for more details.
 postLoginR :: HashDBPersist site user =>
               (Text -> Maybe (Unique user))
            -> HandlerT Auth (HandlerT site IO) TypedContent
 postLoginR uniq = do
-    (mu,mp) <- lift $ runInputPost $ (,)
-        <$> iopt textField "username"
-        <*> iopt textField "password"
+    ct <- lookupHeader "Content-Type"
+    let jsonContent = ((== "application/json") . simpleContentType) <$> ct
+    UserPass mu mp <-
+        case jsonContent of
+          Just True -> requireJsonBody
+          _         -> lift $ runInputPost $ UserPass
+                       <$> iopt textField "username"
+                       <*> iopt textField "password"
 
     isValid <- lift $ fromMaybe (return False) 
                  (validateUser <$> (uniq =<< mu) <*> mp)
@@ -359,3 +416,17 @@ defaultForm loginRoute = do
             }
 
     |]
+
+
+-- | The route, in the parent site, to which the username and password
+--   should be sent in order to log in.  This function is particularly
+--   useful in constructing a 'loginHandler' function which provides a
+--   JSON response.  See the #json JSON Interface section above for more
+--   details.
+--
+--   Since 1.6
+submitRouteHashDB :: YesodAuth site =>
+                  HandlerT Auth (HandlerT site IO) (Route site)
+submitRouteHashDB = do
+    toParent <- getRouteToParent
+    return $ toParent login
