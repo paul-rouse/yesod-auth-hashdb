@@ -52,6 +52,13 @@ instance FromJSON SuccessMsg where
     parseJSON (JSON.Object v) = SuccessMsg <$> v .: "message"
     parseJSON _ = mempty
 
+getBodyJSON :: FromJSON a => YT.YesodExample site (Maybe a)
+getBodyJSON = do
+    resp <- YT.getResponse
+    let body = simpleBody <$> resp
+        result = JSON.decode =<< body
+    return result
+
 integrationSpec :: SpecWith MyTestApp
 integrationSpec = do
     describe "The home page" $ do
@@ -107,9 +114,7 @@ integrationSpec = do
           YT.setUrl ProtectedR
           YT.addRequestHeader ("Accept", "application/json")
         YT.statusIs 401
-        resp <- YT.getResponse
-        let body = simpleBody <$> resp
-            auth = JSON.decode =<< body :: Maybe AuthUrl
+        auth <- getBodyJSON
         YT.assertEqual "Authentication URL" auth (Just $ AuthUrl authUrl)
       it "Custom loginHandler using submitRouteHashDB has correct URL in JSON" $ do
         YT.request $ do
@@ -117,9 +122,7 @@ integrationSpec = do
           YT.setUrl authUrl
           YT.addRequestHeader ("Accept", "application/json")
         YT.statusIs 200
-        resp <- YT.getResponse
-        let body = simpleBody <$> resp
-            login = JSON.decode =<< body :: Maybe LoginUrl
+        login <- getBodyJSON
         YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
 #if MIN_VERSION_yesod_test(1,5,0)
       -- Disable this example for yesod-test < 1.5.0.1, since it uses the wrong
@@ -140,8 +143,6 @@ integrationSpec = do
           -- dependency of yesod-test >= 1.5 on which this item is conditional.
           YT.addTokenFromCookie
         YT.statusIs 200
-        resp <- YT.getResponse
-        let body = simpleBody <$> resp
-            msg = JSON.decode =<< body :: Maybe SuccessMsg
+        msg <- getBodyJSON
         YT.assertEqual "Login success" msg (Just $ SuccessMsg successMsg)
 #endif
