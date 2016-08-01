@@ -32,10 +32,6 @@ import Yesod.Auth
 import Yesod.Auth.HashDB            (HashDBUser(..), authHashDB,
                                      submitRouteHashDB)
 import Yesod.Auth.Message           (AuthMessage (InvalidLogin))
-#if MIN_VERSION_yesod_core(1,4,14)
-import Yesod.Core                   (defaultCsrfMiddleware,
-                                     defaultYesodMiddleware)
-#endif
 
 #if ! MIN_VERSION_yesod_auth(1,4,9)
 import Yesod.Auth.Message           (AuthMessage (LoginTitle))
