@@ -1,0 +1,39 @@
+name:            standalone-testsite
+version:         0.1.1
+license:         MIT
+author:          Paul Rouse
+maintainer:      Paul Rouse <pyr@doynton.org>
+synopsis:        Stand-alone version of test for Yesod.Auth.HashDB
+category:        Web, Yesod
+stability:       Stable
+cabal-version:   >= 1.8.0
+build-type:      Simple
+homepage:        https://github.com/paul-rouse/yesod-auth-hashdb
+bug-reports:     https://github.com/paul-rouse/yesod-auth-hashdb/issues
+description:
+    Stand-alone integration test for Yesod.Auth.HashDB, run as a server.
+    .
+    Normally the integration test is run using Yesod.Test.  However, it
+    may be handy to build the example server as a stand-alone application
+    and debug it.  To do so, use this cabal file and the accompanying
+    stack.yaml.  TestSite.hs needs MIN_VERSION_yesod_test, so a dummy
+    is provided here.  STANDALONE is used in integration.hs to replace
+    the tests with code which uses warp to make a server.
+
+executable integration
+    main-is:         integration.hs
+    hs-source-dirs:  .
+    ghc-options:     -Wall
+    cpp-options:     -DMIN_VERSION_yesod_test(a,b,c)=1 -DSTANDALONE
+    other-modules:   TestSite
+    build-depends:   base >= 4 && < 5
+                   , hspec
+                   , http-conduit
+                   , monad-logger
+                   , persistent-sqlite
+                   , resourcet
+                   , text
+                   , yesod
+                   , yesod-auth
+                   , yesod-auth-hashdb
+                   , yesod-core

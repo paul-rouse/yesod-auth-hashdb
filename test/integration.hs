@@ -9,7 +9,9 @@ import Test.Hspec                   (hspec)
 import Yesod
 import Yesod.Auth.HashDB            (setPassword)
 
+#ifndef STANDALONE
 import IntegrationTest
+#endif
 import TestSite
 
 main :: IO ()
@@ -19,7 +21,10 @@ main = runStderrLoggingT $ withSqliteConn ":memory:" $ \conn -> liftIO $ do
         validUser <- setPassword "MyPassword" $ User "paul" Nothing
         insert_ validUser
     mgr <- newManager
-    -- To try this as a server, replace the `hspec` line below with this one,
-    -- and remove the import of IntegrationTest above.
-    -- warp 3000 $ App mgr conn
+#ifdef STANDALONE
+    -- Run as a stand-alone server - see the cabal file in this directory
+    warp 3000 $ App mgr conn
+#else
+    -- Otherwise run the tests
     hspec $ withApp (App mgr conn) integrationSpec
+#endif

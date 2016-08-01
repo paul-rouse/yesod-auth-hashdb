@@ -1,0 +1,7 @@
+# Used for building standalone-testsite
+packages:
+- ..
+- .
+extra-deps: []
+resolver: lts-6.6
+compiler-check: newer-minor
