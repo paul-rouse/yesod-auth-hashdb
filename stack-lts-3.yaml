@@ -1,0 +1,9 @@
+# One example in the integration test requires at least yesod-test-1.5.0.1.
+# For lts-3 this can be forced by using an extra dep - specify this stack
+# configuration in the .travis.yml ARGS.  (The example is disabled in lts-2
+# because yesod-test-1.5.0.1 requires a newer yesod-core.)
+resolver: lts-3.22
+packages: 
+- .
+extra-deps:
+- yesod-test-1.5.0.1

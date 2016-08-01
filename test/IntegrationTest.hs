@@ -121,27 +121,27 @@ integrationSpec = do
         let body = simpleBody <$> resp
             login = JSON.decode =<< body :: Maybe LoginUrl
         YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
+#if MIN_VERSION_yesod_test(1,5,0)
+      -- Disable this example for yesod-test < 1.5.0.1, since it uses the wrong
+      -- content type for JSON (https://github.com/yesodweb/yesod/issues/1063).
       it "Sending JSON username and password produces JSON success message" $ do
-#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
-        -- This first request is only to get the CSRF token cookie
-        -- if we need it below
+        -- This first request is only to get the CSRF token cookie, used below
         YT.request $ do
           YT.setMethod "GET"
           YT.setUrl authUrl
           YT.addRequestHeader ("Accept", "application/json")
-#endif
         YT.request $ do
           YT.setMethod "POST"
           YT.setUrl loginUrl
           YT.addRequestHeader ("Accept", "application/json")
           YT.addRequestHeader ("Content-Type", "application/json; charset=utf-8")
           YT.setRequestBody "{\"username\":\"paul\",\"password\":\"MyPassword\"}"
-#if MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
-          -- Add the CSRF token (see comment above for circumstances)
+          -- CSRF token is being checked, since yesod-core >= 1.4.14 is a
+          -- dependency of yesod-test >= 1.5 on which this item is conditional.
           YT.addTokenFromCookie
-#endif
         YT.statusIs 200
         resp <- YT.getResponse
         let body = simpleBody <$> resp
             msg = JSON.decode =<< body :: Maybe SuccessMsg
         YT.assertEqual "Login success" msg (Just $ SuccessMsg successMsg)
+#endif
