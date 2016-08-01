@@ -37,6 +37,17 @@ import Yesod.Core                   (defaultCsrfMiddleware,
                                      defaultYesodMiddleware)
 #endif
 
+#if ! MIN_VERSION_yesod_auth(1,4,9)
+import Yesod.Auth.Message           (AuthMessage (LoginTitle))
+defaultLoginHandler :: AuthHandler master Html
+defaultLoginHandler = do
+    tp <- getRouteToParent
+    lift $ authLayout $ do
+        setTitleI LoginTitle
+        master <- getYesod
+        mapM_ (flip apLogin tp) (authPlugins master)
+#endif
+
 
 -- Trivial example site needing authentication
 --
