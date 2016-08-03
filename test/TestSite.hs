@@ -117,15 +117,13 @@ instance YesodAuth App where
     loginHandler = do
         submission <- submitRouteHashDB
         render <- lift getUrlRender
-        dflt <- defaultLoginHandler
         typedContent@(TypedContent ct _) <- selectRep $ do
-            provideRep $ return dflt
+            provideRepType typeHtml $ return emptyContent
+                           -- Dummy: the real Html version is at the end
             provideJson $ object [("loginUrl", toJSON $ render submission)]
         when (ct == typeJson) $
-            -- Short-circuit JSON response, but must still "return" Html
-            -- below to get correct type for loginHandler
-            sendResponse typedContent
-        return dflt
+            sendResponse typedContent   -- Short-circuit JSON response
+        defaultLoginHandler             -- Html response
 
 instance YesodAuthPersist App
 

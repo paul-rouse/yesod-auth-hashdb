@@ -132,21 +132,23 @@
 --
 -- Writing the loginHandler is made a little messy by the fact that its
 -- type allows only HTML content.  A work-around is to send JSON as a
--- short-circuit response.  Here is an example which is geared around using
--- HashDB on its own, supporting both JSON and HTML clients:
+-- short-circuit response, but we still make the choice using selectRep
+-- so as to get its matching of content types.  Here is an example which
+-- is geared around using HashDB on its own, supporting both JSON and HTML
+-- clients:
 --
 -- > instance YesodAuth App where
 -- >    ....
 -- >    loginHandler = do
 -- >         submission <- submitRouteHashDB
 -- >         render <- lift getUrlRender
--- >         dflt <- defaultLoginHandler
 -- >         typedContent@(TypedContent ct _) <- selectRep $ do
--- >             provideRep $ return dflt
+-- >             provideRepType typeHtml $ return emptyContent
+                                -- Dummy: the real Html version is at the end
 -- >             provideJson $ object [("loginUrl", toJSON $ render submission)]
 -- >         when (ct == typeJson) $
 -- >             sendResponse typedContent   -- Short-circuit JSON response
--- >         return dflt                     -- Html response
+-- >         defaultLoginHandler             -- Html response
 --
 -------------------------------------------------------------------------------
 module Yesod.Auth.HashDB
