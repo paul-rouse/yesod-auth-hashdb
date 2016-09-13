@@ -14,6 +14,7 @@ module TestTools (
 
 import TestSite           (App(..))
 import BasicPrelude
+import qualified Prelude  (show)
 import Data.Text          (pack, unpack)
 import Data.ByteString.Lazy (toStrict)
 import Yesod.Core         (RedirectUrl)
@@ -81,7 +82,7 @@ extractLocation = do
     withResponse ( \ SResponse { simpleStatus = s, simpleHeaders = h } -> do
                         let code = statusCode s
                         assertEqual ("Expected a 302 or 303 redirection status "
-                                     ++ "but received " ++ unpack (show code))
+                                     ++ "but received " ++ Prelude.show code)
                                     (code `elem` [302,303])
                                     True
                         return $ lookup "Location" h
