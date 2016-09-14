@@ -7,6 +7,14 @@ of upgrading, please see
 * Complete removal of compatibility with old databases designed for versions before 1.3
 * Add JSON support
 
+## 1.5.1.3
+
+* Fix test failure with basic-prelude >= 0.6 (#6)
+
+## 1.5.1.2
+
+* Relax upper bound to allow persistent-2.6
+
 ## 1.5.1.1
 
 * Minor documentation improvement

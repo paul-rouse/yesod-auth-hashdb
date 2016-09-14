@@ -36,7 +36,7 @@ library
                    , yesod-auth              >= 1.4        && < 1.5
                    , text                    >= 0.7
                    , yesod-persistent        >= 1.2
-                   , persistent              >= 2.1        && < 2.6
+                   , persistent              >= 2.1        && < 2.7
                    , yesod-form              >= 1.4        && < 1.5
                    , pwstore-fast            >= 2.2
                    , aeson
