@@ -1,3 +1,11 @@
+## 1.5.1.3
+
+* Fix test failure with basic-prelude >= 0.6 (#6)
+
+## 1.5.1.2
+
+* Relax upper bound to allow persistent-2.6
+
 ## 1.5.1.1
 
 * Minor documentation improvement
