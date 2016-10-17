@@ -28,6 +28,8 @@ description:
     if you wish to use email verification to set up accounts).
 extra-source-files:  ChangeLog.md
                      stack.yaml
+                     test/stack.yaml
+                     test/standalone-testsite.cabal
 
 library
     build-depends:   base                    >= 4          && < 5
