@@ -1,3 +1,7 @@
+## 1.6.0.1
+
+* Fix serious documentation layout problem caused by typo
+
 ## 1.6
 
 This release completes the breaking changes started in 1.5.  For details

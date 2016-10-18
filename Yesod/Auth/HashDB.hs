@@ -144,7 +144,7 @@
 -- >         render <- lift getUrlRender
 -- >         typedContent@(TypedContent ct _) <- selectRep $ do
 -- >             provideRepType typeHtml $ return emptyContent
-                                -- Dummy: the real Html version is at the end
+-- >                            -- Dummy: the real Html version is at the end
 -- >             provideJson $ object [("loginUrl", toJSON $ render submission)]
 -- >         when (ct == typeJson) $
 -- >             sendResponse typedContent   -- Short-circuit JSON response
