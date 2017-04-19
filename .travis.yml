@@ -24,6 +24,8 @@ matrix:
     compiler: ": # lts-5"
   - env: ARGS="--resolver lts-6"
     compiler: ": # lts-6"
+  - env: ARGS="--resolver lts-7"
+    compiler: ": # lts-7"
   - env: ARGS="--resolver lts"
     compiler: ": # lts"
   - env: ARGS="--resolver nightly"
