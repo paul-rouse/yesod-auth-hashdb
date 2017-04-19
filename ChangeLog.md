@@ -1,3 +1,7 @@
+## 1.6.1
+
+* Relax upper bound on persistent
+
 ## 1.6.0.1
 
 * Fix serious documentation layout problem caused by typo
