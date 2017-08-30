@@ -1,4 +1,5 @@
-resolver: lts-6.6
+resolver: lts-8.24
 packages: 
 - .
-extra-deps: []
+extra-deps:
+- yesod-auth-1.4.18
