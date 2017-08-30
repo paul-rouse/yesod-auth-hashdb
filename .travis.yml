@@ -20,8 +20,6 @@ matrix:
     compiler: ": # lts-2"
   - env: ARGS="--resolver lts-3 --stack-yaml stack-lts-3.yaml"
     compiler: ": # lts-3"
-  - env: ARGS="--resolver lts-5"
-    compiler: ": # lts-5"
   - env: ARGS="--resolver lts-6"
     compiler: ": # lts-6"
   - env: ARGS="--resolver lts-7"
