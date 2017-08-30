@@ -69,7 +69,7 @@
 -- password hash as follows:
 --
 -- > ghci -XOverloadedStrings
--- > > import Crypto.PasswordStore
+-- > > import Yesod.Auth.Util.PasswordStore
 -- > > makePassword "MyPassword" 17
 --
 -- where \"17\" is the default strength parameter ('defaultStrength') used
@@ -169,7 +169,7 @@ module Yesod.Auth.HashDB
 #if __GLASGOW_HASKELL__ < 710
 import           Control.Applicative         ((<$>), (<*>), pure)
 #endif
-import           Crypto.PasswordStore        (makePassword, strengthenPassword,
+import           Yesod.Auth.Util.PasswordStore (makePassword, strengthenPassword,
                                               verifyPassword, passwordStrength)
 import           Data.Aeson                  ((.:?))
 import qualified Data.ByteString.Char8 as BS (pack, unpack)
@@ -186,8 +186,8 @@ defaultCsrfParamName :: Text
 defaultCsrfParamName = "_token"
 #endif
 
--- | Default strength used for passwords (see "Crypto.PasswordStore" for
---   details).
+-- | Default strength used for passwords (see "Yesod.Auth.Util.PasswordStore"
+--   for details).
 defaultStrength :: Int
 defaultStrength = 17
 
@@ -209,7 +209,7 @@ class HashDBUser user where
     {-# MINIMAL userPasswordHash, setPasswordHash #-}
 
 
--- | Calculate a new-style password hash using "Crypto.PasswordStore".
+-- | Calculate a new-style password hash using "Yesod.Auth.Util.PasswordStore".
 passwordHash :: MonadIO m => Int -> Text -> m Text
 passwordHash strength pwd = do
     h <- liftIO $ makePassword (BS.pack $ unpack pwd) strength

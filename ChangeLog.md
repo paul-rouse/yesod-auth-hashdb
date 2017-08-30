@@ -1,3 +1,7 @@
+## 1.6.2
+
+* Use `PasswordStore` from `yesod-auth` instead of `pwstore-fast` (uses `cryptonite` instead of `cryptohash`)
+
 ## 1.6.1
 
 * Relax upper bound on persistent
