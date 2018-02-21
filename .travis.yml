@@ -45,14 +45,21 @@ before_install:
   else
     curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
   fi
+- |
+  set -ex
+  # Add in extra-deps for older snapshots (yesod-auth >= 1.4.18 in lts < 9)
+  stack --no-terminal --install-ghc $ARGS test --bench --dry-run || ( \
+        stack --no-terminal $ARGS build cabal-install && \
+        stack --no-terminal $ARGS solver --update-config )
+  stack $ARGS --no-terminal solver --update-config
+
+  # Build the dependencies
+  stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
 
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-# NB the `solver` command is needed to get yesod-auth >= 1.4.18 in lts < 9
-script: |
-  stack $ARGS --no-terminal solver --update-config
-  stack $ARGS --no-terminal --install-ghc test --haddock
+script: stack $ARGS --no-terminal --install-ghc test --haddock
 
 # Caching so the next build will be fast too.
 cache:
