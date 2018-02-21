@@ -1,3 +1,8 @@
+## 1.7
+
+* Update for changes in yesod version 1.6, but retain compatibility with previous versions
+* Remove support for GHC below 7.10, and lts below 6
+
 ## 1.6.2
 
 * Use `PasswordStore` from `yesod-auth` instead of `pwstore-fast` (uses `cryptonite` instead of `cryptohash`)

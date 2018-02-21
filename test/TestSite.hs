@@ -46,6 +46,17 @@ data App = App
     , appDBConnection :: SqlBackend
     }
 
+#if !MIN_VERSION_yesod_core(1,6,0)
+#define liftHandler lift
+#define doRunDB runDB
+getAppHttpManager :: App -> Manager
+getAppHttpManager = appHttpManager
+#else
+#define doRunDB liftHandler $ runDB
+getAppHttpManager :: (MonadHandler m, HandlerSite m ~ App) => m Manager
+getAppHttpManager = appHttpManager <$> getYesod
+#endif
+
 mkYesod "App" [parseRoutes|
 /       HomeR GET
 /prot   ProtectedR GET
@@ -81,7 +92,7 @@ instance YesodAuth App where
     loginDest _ = HomeR
     logoutDest _ = HomeR
 
-    authenticate creds = runDB $ do
+    authenticate creds = doRunDB $ do
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid _) -> return $ Authenticated uid
@@ -89,11 +100,11 @@ instance YesodAuth App where
 
     authPlugins _ = [ authHashDB (Just . UniqueUser) ]
 
-    authHttpManager = appHttpManager
+    authHttpManager = getAppHttpManager
 
     loginHandler = do
         submission <- submitRouteHashDB
-        render <- lift getUrlRender
+        render <- liftHandler getUrlRender
         typedContent@(TypedContent ct _) <- selectRep $ do
             provideRepType typeHtml $ return emptyContent
                            -- Dummy: the real Html version is at the end

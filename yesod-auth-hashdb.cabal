@@ -1,5 +1,5 @@
 name:            yesod-auth-hashdb
-version:         1.6.2
+version:         1.7
 license:         MIT
 license-file:    LICENSE
 author:          Patrick Brisbin, later changes Paul Rouse
@@ -34,12 +34,12 @@ extra-source-files:  ChangeLog.md
 library
     build-depends:   base                    >= 4.8        && < 5
                    , bytestring              >= 0.9.1.4
-                   , yesod-core              >= 1.4.19     && < 1.5
-                   , yesod-auth              >= 1.4.18     && < 1.5
+                   , yesod-core              >= 1.4.19     && < 1.7
+                   , yesod-auth              >= 1.4.18     && < 1.7
                    , text                    >= 0.7
                    , yesod-persistent        >= 1.2
-                   , persistent              >= 2.1        && < 2.8
-                   , yesod-form              >= 1.4        && < 1.5
+                   , persistent              >= 2.1        && < 2.9
+                   , yesod-form              >= 1.4        && < 1.7
                    , aeson
 
     exposed-modules: Yesod.Auth.HashDB
@@ -81,7 +81,7 @@ test-suite integration
                    , unordered-containers
                    , wai-extra
                    , yesod
-                   , yesod-auth         >= 1.4.18 && < 1.5
+                   , yesod-auth         >= 1.4.18 && < 1.5 || >= 1.6.1 && < 1.7
                    , yesod-auth-hashdb
                    , yesod-core
                    , yesod-test         >= 1.5.0.1

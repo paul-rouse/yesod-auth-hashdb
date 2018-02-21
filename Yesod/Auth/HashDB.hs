@@ -3,6 +3,8 @@
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE OverloadedStrings          #-}
 -------------------------------------------------------------------------------
 -- |
@@ -178,6 +180,12 @@ import           Yesod.Core
 import           Yesod.Form
 import           Yesod.Persist
 
+#if !MIN_VERSION_yesod_core(1,6,0)
+type HandlerFor site a = HandlerT site IO a
+type WidgetFor site a  = WidgetT site IO ()
+#define liftHandler lift
+#endif
+
 -- | Default strength used for passwords (see "Yesod.Auth.Util.PasswordStore"
 --   for details).
 defaultStrength :: Int
@@ -317,7 +325,7 @@ instance FromJSON UserPass where
 validateUser :: HashDBPersist site user =>
                 Unique user     -- ^ User unique identifier
              -> Text            -- ^ Password in plaintext
-             -> HandlerT site IO Bool
+             -> HandlerFor site Bool
 validateUser userID passwd = do
     -- Get user data
     user <- runDB $ getBy userID
@@ -335,21 +343,21 @@ login = PluginR "hashdb" ["login"]
 --   See the \"JSON Interface\" section above for more details.
 postLoginR :: HashDBPersist site user =>
               (Text -> Maybe (Unique user))
-           -> HandlerT Auth (HandlerT site IO) TypedContent
+           -> AuthHandler site TypedContent
 postLoginR uniq = do
     ct <- lookupHeader "Content-Type"
     let jsonContent = ((== "application/json") . simpleContentType) <$> ct
     UserPass mu mp <-
         case jsonContent of
           Just True -> requireJsonBody
-          _         -> lift $ runInputPost $ UserPass
+          _         -> liftHandler $ runInputPost $ UserPass
                        <$> iopt textField "username"
                        <*> iopt textField "password"
 
-    isValid <- lift $ fromMaybe (return False) 
+    isValid <- liftHandler $ fromMaybe (return False) 
                  (validateUser <$> (uniq =<< mu) <*> mp)
     if isValid 
-        then lift $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
+        then liftHandler $ setCredsRedirect $ Creds "hashdb" (fromMaybe "" mu) []
         else loginErrorMessageI LoginR Msg.InvalidUsernamePass
 
 
@@ -372,18 +380,20 @@ authHashDB = authHashDBWithForm defaultForm
 --
 -- Since 1.3.2
 --
-authHashDBWithForm :: HashDBPersist site user =>
-                      (Route site -> WidgetT site IO ())
+authHashDBWithForm :: forall site user.
+                      HashDBPersist site user =>
+                      (Route site -> WidgetFor site ())
                    -> (Text -> Maybe (Unique user))
                    -> AuthPlugin site
 authHashDBWithForm form uniq =
     AuthPlugin "hashdb" dispatch $ \tm -> form (tm login)
     where
+        dispatch :: Text -> [Text] -> AuthHandler site TypedContent
         dispatch "POST" ["login"] = postLoginR uniq >>= sendResponse
         dispatch _ _              = notFound
 
 
-defaultForm :: Yesod app => Route app -> WidgetT app IO ()
+defaultForm :: Yesod app => Route app -> WidgetFor app ()
 defaultForm loginRoute = do
     request <- getRequest
     let mtok = reqToken request
@@ -425,8 +435,7 @@ defaultForm loginRoute = do
 --   details.
 --
 --   Since 1.6
-submitRouteHashDB :: YesodAuth site =>
-                  HandlerT Auth (HandlerT site IO) (Route site)
+submitRouteHashDB :: YesodAuth site => AuthHandler site (Route site)
 submitRouteHashDB = do
     toParent <- getRouteToParent
     return $ toParent login
