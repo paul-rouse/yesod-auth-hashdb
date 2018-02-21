@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
@@ -18,15 +17,9 @@ import qualified Yesod.Test as YT
 import TestSite                     (App, Route(..), Handler, runDB)
 import TestTools
 
-#if MIN_VERSION_yesod_test(1,5,0)
 type MyTestApp = YT.TestApp App
 withApp :: App -> SpecWith (YT.TestApp App) -> Spec
 withApp app = before $ return (app, id)
-#else
-type MyTestApp = App
-withApp :: App -> SpecWith App -> Spec
-withApp app = before $ return app
-#endif
 
 authUrl :: Text
 authUrl = "http://localhost:3000/auth/login"
@@ -84,15 +77,8 @@ integrationSpec = do
         YT.request $ do
             YT.setMethod "POST"
             YT.setUrl $ AuthR LogoutR
-#if MIN_VERSION_yesod_core(1,4,19)
             -- yesod-core-1.4.19 added the CSRF token to the redirectToPost form
             YT.addToken
-#elif MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4)
-            -- Otherwise we still use CSRF middleware (see TestSite.hs) from
-            -- yesod-core 1.4.14 onwards as long as we can get the token
-            -- from the cookie, which was implemented in yesod-test-1.4.4
-            YT.addTokenFromCookie
-#endif
         YT.get HomeR
         YT.statusIs 200
         YT.bodyContains "Your current auth ID: Nothing"
@@ -124,8 +110,7 @@ integrationSpec = do
         YT.statusIs 200
         login <- getBodyJSON
         YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
-#if MIN_VERSION_yesod_test(1,5,0)
-      -- Disable this example for yesod-test < 1.5.0.1, since it uses the wrong
+      -- This example needs yesod-test >= 1.5.0.1, since older ones use wrong
       -- content type for JSON (https://github.com/yesodweb/yesod/issues/1063).
       it "Sending JSON username and password produces JSON success message" $ do
         -- This first request is only to get the CSRF token cookie, used below
@@ -139,10 +124,8 @@ integrationSpec = do
           YT.addRequestHeader ("Accept", "application/json")
           YT.addRequestHeader ("Content-Type", "application/json; charset=utf-8")
           YT.setRequestBody "{\"username\":\"paul\",\"password\":\"MyPassword\"}"
-          -- CSRF token is being checked, since yesod-core >= 1.4.14 is a
-          -- dependency of yesod-test >= 1.5 on which this item is conditional.
+          -- CSRF token is being checked, since yesod-core >= 1.4.14 is forced
           YT.addTokenFromCookie
         YT.statusIs 200
         msg <- getBodyJSON
         YT.assertEqual "Login success" msg (Just $ SuccessMsg successMsg)
-#endif

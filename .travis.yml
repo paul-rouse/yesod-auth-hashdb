@@ -14,18 +14,14 @@ addons:
 # change flags or use --stack-yaml to point to a different file.
 matrix:
   include:
-  - env: ARGS=""
-    compiler: ": # Default"
-  - env: ARGS="--resolver lts-2 --stack-yaml stack-lts-2.yaml"
-    compiler: ": # lts-2"
-  - env: ARGS="--resolver lts-3 --stack-yaml stack-lts-3.yaml"
-    compiler: ": # lts-3"
   - env: ARGS="--resolver lts-6"
     compiler: ": # lts-6"
   - env: ARGS="--resolver lts-7"
     compiler: ": # lts-7"
-  - env: ARGS="--resolver lts"
-    compiler: ": # lts"
+  - env: ARGS="--resolver lts-9"
+    compiler: ": # lts-9"
+  - env: ARGS="--resolver lts-10"
+    compiler: ": # --resolver lts-10"
   - env: ARGS="--resolver nightly"
     compiler: ": # nightly"
   - env: ARGS=""
@@ -53,7 +49,10 @@ before_install:
 # This line does all of the work: installs GHC if necessary, build the library,
 # executables, and test suites, and runs the test suites. --no-terminal works
 # around some quirks in Travis's terminal implementation.
-script: stack $ARGS --no-terminal --install-ghc test --haddock
+# NB the `solver` command is needed to get yesod-auth >= 1.4.18 in lts < 9
+script: |
+  stack $ARGS --no-terminal solver --update-config
+  stack $ARGS --no-terminal --install-ghc test --haddock
 
 # Caching so the next build will be fast too.
 cache:

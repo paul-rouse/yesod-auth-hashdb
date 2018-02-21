@@ -32,9 +32,9 @@ extra-source-files:  ChangeLog.md
                      test/standalone-testsite.cabal
 
 library
-    build-depends:   base                    >= 4          && < 5
+    build-depends:   base                    >= 4.8        && < 5
                    , bytestring              >= 0.9.1.4
-                   , yesod-core              >= 1.4        && < 1.5
+                   , yesod-core              >= 1.4.19     && < 1.5
                    , yesod-auth              >= 1.4.18     && < 1.5
                    , text                    >= 0.7
                    , yesod-persistent        >= 1.2
@@ -52,7 +52,7 @@ test-suite test
     ghc-options:     -Wall
     other-modules:   ExampleData
                      NonDBTests
-    build-depends:   base >= 4 && < 5
+    build-depends:   base               >= 4.8 && < 5
                    , yesod-auth-hashdb
                    , hspec
                    , text
@@ -65,12 +65,12 @@ test-suite integration
     other-modules:   IntegrationTest
                    , TestSite
                    , TestTools
-    build-depends:   base >= 4 && < 5
+    build-depends:   base               >= 4.8 && < 5
                    , aeson
                    , bytestring
                    , basic-prelude
                    , containers
-                   , hspec                   >= 2.0.0
+                   , hspec              >= 2.0.0
                    , http-conduit
                    , http-types
                    , monad-logger
@@ -81,10 +81,10 @@ test-suite integration
                    , unordered-containers
                    , wai-extra
                    , yesod
-                   , yesod-auth
+                   , yesod-auth         >= 1.4.18 && < 1.5
                    , yesod-auth-hashdb
                    , yesod-core
-                   , yesod-test              >= 1.4.3
+                   , yesod-test         >= 1.5.0.1
 
 source-repository head
   type:     git

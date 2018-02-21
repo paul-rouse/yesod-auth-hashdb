@@ -1,7 +1,4 @@
 {-# LANGUAGE CPP                        #-}
-#if __GLASGOW_HASKELL__ < 710
-{-# LANGUAGE DeriveDataTypeable         #-}
-#endif
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -19,10 +16,6 @@ module TestSite (
     runDB
 ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative          ((<$>))
-import Data.Typeable                (Typeable)
-#endif
 import Control.Monad                (when)
 import Data.Text
 import Database.Persist.Sqlite
@@ -33,17 +26,6 @@ import Yesod.Auth.HashDB            (HashDBUser(..), authHashDB,
                                      submitRouteHashDB)
 import Yesod.Auth.Message           (AuthMessage (InvalidLogin))
 
-#if ! MIN_VERSION_yesod_auth(1,4,9)
-import Yesod.Auth.Message           (AuthMessage (LoginTitle))
-defaultLoginHandler :: AuthHandler master Html
-defaultLoginHandler = do
-    tp <- getRouteToParent
-    lift $ authLayout $ do
-        setTitleI LoginTitle
-        master <- getYesod
-        mapM_ (flip apLogin tp) (authPlugins master)
-#endif
-
 
 -- Trivial example site needing authentication
 --
@@ -53,9 +35,6 @@ User
     password   Text Maybe
     UniqueUser name
     deriving Show
-#if __GLASGOW_HASKELL__ < 710
-    deriving Typeable
-#endif
 |]
 
 instance HashDBUser User where
@@ -86,11 +65,9 @@ instance Yesod App where
     -- Other pages (HomeR and AuthR _) do not require login
     isAuthorized _ _ = return Authorized
 
-#if MIN_VERSION_yesod_core(1,4,19) || (MIN_VERSION_yesod_core(1,4,14) && MIN_VERSION_yesod_test(1,4,4))
-    -- CSRF middleware requires yesod-core-1.4.14, but only include it if tests
-    -- can get at the token (see IntegrationTest.hs for additional comment).
+    -- CSRF middleware requires yesod-core-1.4.14, yesod-test >= 1.5 is
+    -- required so that tests can get at the token.
     yesodMiddleware = defaultCsrfMiddleware . defaultYesodMiddleware
-#endif
 
 instance YesodPersist App where
     type YesodPersistBackend App = SqlBackend

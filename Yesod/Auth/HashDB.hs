@@ -166,9 +166,6 @@ module Yesod.Auth.HashDB
     ) where
 
 
-#if __GLASGOW_HASKELL__ < 710
-import           Control.Applicative         ((<$>), (<*>), pure)
-#endif
 import           Yesod.Auth.Util.PasswordStore (makePassword, strengthenPassword,
                                               verifyPassword, passwordStrength)
 import           Data.Aeson                  ((.:?))
@@ -180,11 +177,6 @@ import qualified Yesod.Auth.Message    as Msg
 import           Yesod.Core
 import           Yesod.Form
 import           Yesod.Persist
-
-#if !MIN_VERSION_yesod_core(1,4,14)
-defaultCsrfParamName :: Text
-defaultCsrfParamName = "_token"
-#endif
 
 -- | Default strength used for passwords (see "Yesod.Auth.Util.PasswordStore"
 --   for details).
