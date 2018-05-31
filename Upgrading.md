@@ -51,7 +51,7 @@ a separate salt field in a user record.  **If you see compilation errors
 as a result of this change, you should take it as a final warning to complete
 the migration of old database models!**
 
-###Fixing the Compilation Error
+### Fixing the Compilation Error
 
 Fixing the compilation error is easy: you must define `setPasswordHash`
 instead.  Temporarily, while completing the migration, make sure that
@@ -73,7 +73,7 @@ instance HashDBUser User where
           }
 ```
 
-###Migrating an Old Database
+### Migrating an Old Database
 
 A new password must be set for any user who still has a non-empty salt
 field; this will ensure that the salt is set to the empty string, which
