@@ -38,7 +38,7 @@ afterLogin = "/prot"
 
 -- Force failure by swearing that black is white, and pigs can fly...
 assertFailure :: String -> YesodExample App ()
-assertFailure msg = assertEqual msg True False
+assertFailure msg = assertEq msg True False
 
 -- Convert an absolute URL (eg extracted from responses) to just the path
 -- for use in test requests.
@@ -60,7 +60,7 @@ firstRedirect method url = do
 
 assertLoginPage :: ByteString -> YesodExample App ()
 assertLoginPage loc = do
-    assertEqual "correct login redirection location"
+    assertEq "correct login redirection location"
                 (testRoot ++ "/auth/login") loc
     get $ urlPathB loc
     statusIs 200
@@ -81,7 +81,7 @@ extractLocation :: YesodExample App (Maybe ByteString)
 extractLocation = do
     withResponse ( \ SResponse { simpleStatus = s, simpleHeaders = h } -> do
                         let code = statusCode s
-                        assertEqual ("Expected a 302 or 303 redirection status "
+                        assertEq ("Expected a 302 or 303 redirection status "
                                      ++ "but received " ++ Prelude.show code)
                                     (code `elem` [302,303])
                                     True
@@ -119,7 +119,7 @@ doLoginPart1 user pass = do
 doLoginPart2 :: Maybe ByteString -> YesodExample App (Maybe ByteString)
 doLoginPart2 mbloc2 = do
     maybe (assertFailure "Should have second location header")
-          (assertEqual "Check after-login redirection" $ testRoot ++ afterLogin)
+          (assertEq "Check after-login redirection" $ testRoot ++ afterLogin)
           mbloc2
     -- Now get the home page to obtain the sessAuth value
     get ("/" :: Text)

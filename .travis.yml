@@ -14,16 +14,12 @@ addons:
 # change flags or use --stack-yaml to point to a different file.
 matrix:
   include:
-  - env: ARGS="--resolver lts-6"
-    compiler: ": # lts-6"
-  - env: ARGS="--resolver lts-7"
-    compiler: ": # lts-7"
   - env: ARGS="--resolver lts-9"
     compiler: ": # lts-9"
-  - env: ARGS="--resolver lts-10"
-    compiler: ": # lts-10"
   - env: ARGS="--resolver lts-11"
     compiler: ": # lts-11"
+  - env: ARGS="--resolver lts-12"
+    compiler: ": # lts-12"
   - env: ARGS="--resolver nightly"
     compiler: ": # nightly"
   - env: ARGS=""
@@ -44,19 +40,13 @@ before_install:
   then
     curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin;
   else
-    if [[ "$ARGS" =~ lts-[67] ]];
-    then
-      # Recent stack (1.7) seems not to understand older cabal output - use 1.6
-      curl -L https://github.com/commercialhaskell/stack/releases/download/v1.6.5/stack-1.6.5-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
-    else
-      curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
-    fi
+    curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack';
   fi
 
 install:
 - |
   set -ex
-  # Add in extra-deps for older snapshots (yesod-auth >= 1.4.18 in lts < 9)
+  # Add in extra-deps for older snapshots
   stack --no-terminal --install-ghc $ARGS test --bench --dry-run || ( \
         stack --no-terminal $ARGS build cabal-install && \
         stack --no-terminal $ARGS solver --update-config )

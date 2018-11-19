@@ -1,3 +1,8 @@
+## 1.7.1
+
+* Relax upper bounds to allow persistent-2.9 (for GHC 8.6 versions of Stackage nightly)
+* Remove testing of GHC below 8.0.2, and lts below 9
+
 ## 1.7
 
 * Update for changes in yesod version 1.6, but retain compatibility with previous versions

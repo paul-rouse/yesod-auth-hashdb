@@ -11,10 +11,10 @@ import Data.Aeson                   (FromJSON, parseJSON, (.:))
 import qualified Data.Aeson as JSON
 import Network.Wai.Test             (simpleBody)
 import Test.Hspec                   (Spec, SpecWith, before,
-                                     describe, context, it)
+                                     describe, it)
 import qualified Yesod.Test as YT
 
-import TestSite                     (App, Route(..), Handler, runDB)
+import TestSite                     (App, Route(..))
 import TestTools
 
 type MyTestApp = YT.TestApp App
@@ -24,7 +24,7 @@ withApp app = before $ return (app, id)
 authUrl :: Text
 authUrl = "http://localhost:3000/auth/login"
 
-data AuthUrl = AuthUrl Text deriving Eq
+data AuthUrl = AuthUrl Text deriving (Eq, Show)
 instance FromJSON AuthUrl where
     parseJSON (JSON.Object v) = AuthUrl <$> v .: "authentication_url"
     parseJSON _ = mempty
@@ -32,7 +32,7 @@ instance FromJSON AuthUrl where
 loginUrl :: Text
 loginUrl = "http://localhost:3000/auth/page/hashdb/login"
 
-data LoginUrl = LoginUrl Text deriving Eq
+data LoginUrl = LoginUrl Text deriving (Eq, Show)
 instance FromJSON LoginUrl where
     parseJSON (JSON.Object v) = LoginUrl <$> v .: "loginUrl"
     parseJSON _ = mempty
@@ -40,7 +40,7 @@ instance FromJSON LoginUrl where
 successMsg :: Text
 successMsg = "Login Successful"
 
-data SuccessMsg = SuccessMsg Text deriving Eq
+data SuccessMsg = SuccessMsg Text deriving (Eq, Show)
 instance FromJSON SuccessMsg where
     parseJSON (JSON.Object v) = SuccessMsg <$> v .: "message"
     parseJSON _ = mempty
@@ -101,7 +101,7 @@ integrationSpec = do
           YT.addRequestHeader ("Accept", "application/json")
         YT.statusIs 401
         auth <- getBodyJSON
-        YT.assertEqual "Authentication URL" auth (Just $ AuthUrl authUrl)
+        YT.assertEq "Authentication URL" auth (Just $ AuthUrl authUrl)
       it "Custom loginHandler using submitRouteHashDB has correct URL in JSON" $ do
         YT.request $ do
           YT.setMethod "GET"
@@ -109,7 +109,7 @@ integrationSpec = do
           YT.addRequestHeader ("Accept", "application/json")
         YT.statusIs 200
         login <- getBodyJSON
-        YT.assertEqual "Login URL" login (Just $ LoginUrl loginUrl)
+        YT.assertEq "Login URL" login (Just $ LoginUrl loginUrl)
       -- This example needs yesod-test >= 1.5.0.1, since older ones use wrong
       -- content type for JSON (https://github.com/yesodweb/yesod/issues/1063).
       it "Sending JSON username and password produces JSON success message" $ do
@@ -128,4 +128,4 @@ integrationSpec = do
           YT.addTokenFromCookie
         YT.statusIs 200
         msg <- getBodyJSON
-        YT.assertEqual "Login success" msg (Just $ SuccessMsg successMsg)
+        YT.assertEq "Login success" msg (Just $ SuccessMsg successMsg)
