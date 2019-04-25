@@ -186,6 +186,10 @@ type WidgetFor site a  = WidgetT site IO ()
 #define liftHandler lift
 #endif
 
+#if !MIN_VERSION_yesod_core(1,6,11)
+#define requireInsecureJsonBody requireJsonBody
+#endif
+
 -- | Default strength used for passwords (see "Yesod.Auth.Util.PasswordStore"
 --   for details).
 defaultStrength :: Int
@@ -349,7 +353,7 @@ postLoginR uniq = do
     let jsonContent = ((== "application/json") . simpleContentType) <$> ct
     UserPass mu mp <-
         case jsonContent of
-          Just True -> requireJsonBody
+          Just True -> requireInsecureJsonBody  -- We already know content type!
           _         -> liftHandler $ runInputPost $ UserPass
                        <$> iopt textField "username"
                        <*> iopt textField "password"
