@@ -1,3 +1,8 @@
+## 1.7.1.1
+
+* Fix test and relax upper bound for persistent-2.10 / persistent-template-2.7
+* Replace use of deprecated `requireJsonBody`
+
 ## 1.7.1
 
 * Relax upper bounds to allow persistent-2.9 (for GHC 8.6 versions of Stackage nightly)
