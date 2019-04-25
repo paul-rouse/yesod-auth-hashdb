@@ -20,6 +20,8 @@ matrix:
     compiler: ": # lts-11"
   - env: ARGS="--resolver lts-12"
     compiler: ": # lts-12"
+  - env: ARGS="--resolver lts-13"
+    compiler: ": # lts-13"
   - env: ARGS="--resolver nightly"
     compiler: ": # nightly"
   - env: ARGS=""
