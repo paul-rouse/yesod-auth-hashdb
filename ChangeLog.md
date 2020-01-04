@@ -1,3 +1,7 @@
+## 1.7.1.2
+
+* Fix test to allow use of persistent-template-2.8
+
 ## 1.7.1.1
 
 * Fix test and relax upper bound for persistent-2.10 / persistent-template-2.7

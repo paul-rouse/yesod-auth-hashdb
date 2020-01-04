@@ -7,6 +7,11 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+#if __GLASGOW_HASKELL__ >= 802
+-- Retain support for older compilers, assuming dependency versions which do too
+{-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+#endif
 
 module TestSite (
     User(..),
