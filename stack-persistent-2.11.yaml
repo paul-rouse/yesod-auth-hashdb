@@ -1,4 +1,4 @@
-resolver: nightly-2020-11-01
+resolver: nightly-2020-11-06
 packages:
 - .
 extra-deps: 
@@ -6,3 +6,4 @@ extra-deps:
 - yesod-auth-1.6.10.1
 - yesod-persistent-1.6.0.5
 - persistent-template-2.9.1.0
+- persistent-sqlite-2.11.0.0

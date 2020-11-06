@@ -32,9 +32,16 @@ packages:
       sha256: 644eb4bc1f47c53d0eaf9e5df75a650dc38df260e3600254886cab8dffeb854c
   original:
     hackage: persistent-template-2.9.1.0
+- completed:
+    hackage: persistent-sqlite-2.11.0.0@sha256:76fe4e41866cce2e397148b0f2fc687ff54bf1f3542c538eff08792968738cdc,5031
+    pantry-tree:
+      size: 748
+      sha256: 521e1ede43e844ba71c491e3875513597cd67aec0ba20f37f084f60eeda39592
+  original:
+    hackage: persistent-sqlite-2.11.0.0
 snapshots:
 - completed:
-    size: 543569
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2020/11/1.yaml
-    sha256: 0a4d6f892c17fb09163a2245f0523b4a23a063048bc843fc07061a0f980ede01
-  original: nightly-2020-11-01
+    size: 544237
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2020/11/6.yaml
+    sha256: d8fa9554a98e6d3c1cf05ca6c5b7cfadedc6ad6461df6eb5b8202fafbf102bad
+  original: nightly-2020-11-06
