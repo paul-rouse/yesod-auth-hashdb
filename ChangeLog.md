@@ -1,3 +1,7 @@
+## 1.7.1.3
+
+* Support `persistent-2.11` [#8](https://github.com/paul-rouse/yesod-auth-hashdb/pull/8)
+
 ## 1.7.1.2
 
 * Fix test to allow use of persistent-template-2.8
