@@ -7,7 +7,7 @@ maintainer:      Paul Rouse <pyr@doynton.org>
 synopsis:        Authentication plugin for Yesod.
 category:        Web, Yesod
 stability:       Stable
-cabal-version:   >= 1.8.0
+cabal-version:   >= 1.10
 build-type:      Simple
 homepage:        https://github.com/paul-rouse/yesod-auth-hashdb
 bug-reports:     https://github.com/paul-rouse/yesod-auth-hashdb/issues
