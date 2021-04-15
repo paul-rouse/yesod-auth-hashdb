@@ -39,7 +39,7 @@ library
                    , text                    >= 0.7
                    , yesod-persistent        >= 1.2
                    , persistent              >= 2.1
-                   , yesod-form              >= 1.4        && < 1.7
+                   , yesod-form              >= 1.4        && < 1.8
                    , aeson
 
     exposed-modules: Yesod.Auth.HashDB
