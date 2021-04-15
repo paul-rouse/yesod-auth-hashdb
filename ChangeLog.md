@@ -1,3 +1,7 @@
+## 1.7.1.6
+
+* Bump upper bound on `yesod-form` to allow 1.7
+
 ## 1.7.1.3
 
 * Support `persistent-2.11` [#8](https://github.com/paul-rouse/yesod-auth-hashdb/pull/8)
