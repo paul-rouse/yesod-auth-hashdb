@@ -3,5 +3,5 @@ packages:
 - ..
 - .
 extra-deps: []
-resolver: lts-6.6
+resolver: lts-17.9
 compiler-check: newer-minor
