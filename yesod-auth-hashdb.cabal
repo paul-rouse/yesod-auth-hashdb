@@ -78,7 +78,7 @@ test-suite integration
                    , http-types
                    , monad-logger
                    , network-uri
-                   , persistent-sqlite  >= 2.1 && < 2.12
+                   , persistent-sqlite  >= 2.1 && < 2.14
                    , resourcet
                    , text
                    , unordered-containers
