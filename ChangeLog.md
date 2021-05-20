@@ -1,3 +1,7 @@
+## 1.7.1.7
+
+* Remove upper bound on `persistent-sqlite` in tests
+
 ## 1.7.1.6
 
 * Bump upper bound on `yesod-form` to allow 1.7
