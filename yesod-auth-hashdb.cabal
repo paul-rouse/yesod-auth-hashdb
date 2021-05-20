@@ -1,5 +1,5 @@
 name:            yesod-auth-hashdb
-version:         1.7.1.6
+version:         1.7.1.7
 license:         MIT
 license-file:    LICENSE
 author:          Patrick Brisbin, later changes Paul Rouse
@@ -78,7 +78,7 @@ test-suite integration
                    , http-types
                    , monad-logger
                    , network-uri
-                   , persistent-sqlite  >= 2.1 && < 2.12
+                   , persistent-sqlite  >= 2.1
                    , resourcet
                    , text
                    , unordered-containers
